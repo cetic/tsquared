@@ -6,7 +6,7 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 Hotelling’s T2 is initially for sampled distribution comparison to a reference distribution,
 known as a generalization of the t-statistic for multivariate hypothesis testing.
 
-For monitoring, a single multivariate observation is compared to a reference distribution
+For monitoring, a single multivariate observation is compared to a reference distribution.
 This is more a generalization of the z-score.
 
 
