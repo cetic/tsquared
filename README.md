@@ -10,4 +10,4 @@ For monitoring, a single multivariate observation is compared to a reference dis
 This is more a generalization of the z-score.
 
 
-<a href="https://github.com/cetic/TSquared/pictures/z-score.jpg"><img class="fig" src="https://github.com/cetic/TSquared/pictures/z-score.jpg" style="width:100%; height:auto;"/></a>
+<a href="https://github.com/cetic/TSquared/tree/master/pictures/z-score.jpg"><img class="fig" src="https://github.com/cetic/TSquared/tree/master/pictures/z-score.jpg" style="width:100%; height:auto;"/></a>
