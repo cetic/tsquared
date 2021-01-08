@@ -37,6 +37,8 @@ How T-Squared is related to T-Test?
 
 How T-Squared is related to Mahalanobis Distance?
 
+<img src="pictures/equ_mahalanobis.PNG" width="300" >
+
 Should I use PCA with T-Squared?
 
 Can I apply T-Squared to any kind of process?
