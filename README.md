@@ -77,9 +77,9 @@ Yes, the cleaner the better
 
 The T-squared procedure can be applied 1 or 2 times to the training set and outliers can be filtered at each round.
 
-The risk to work with a training set not clean is to have an univariate outlier which is an inlier in multivariate, the multivariate UCL being too large.
+The risk to work with a training set not clean is to have an univariate outlier which is an inlier in multivariate, the multivariate UCL being too large (Observation n°78).
 
-<img src="pictures/Image_inlier.png" width="500" >
+<img src="pictures/Image_inlier.png" width="300" >
 
 
 
