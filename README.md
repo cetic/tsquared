@@ -64,7 +64,7 @@ By extension to more dimensions, we understand that reducing "blindly" the numbe
 
 
 
-Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor as well the residual group of components.
+Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor as well the residual group of components in a separated monitoring.
 
 
 #### Can I apply T-Squared to any kind of process?
