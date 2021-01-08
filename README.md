@@ -34,17 +34,30 @@ The covariance matrix of the reference multivariate distribution is formed by co
 
 ## Questions
 How T-Squared is related to T-Test?
+
 How T-Squared is related to Mahalanobis Distance?
+
 Should I use PCA with T-Squared?
+
 Can I apply T-Squared to any kind of process?
-What are the conditions on parameters to use T-Squared
+
+What are the conditions on parameters to use T-Squared?
+
 Should I clean dataset before training?
+
+
 Is there a procedure to clean the data?
+
 What variables cause the outlier? 
+
 What is MYT decomposition?
+
 How deviation types impact T-Squared?
+
 Is a T-Squared monitoring sufficient? Or do I still need univariate monitoring?
+
 UCL, what does that mean in multivariate context?
+
 How to compute UCL?
 
 
