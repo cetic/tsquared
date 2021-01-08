@@ -51,14 +51,17 @@ But this should be done cautiously
 2. PCA is often used to reduce dimensionality by selecting the strongest « principal » components defining the underlying relation between variables
 3. T2 score on all PCA components = T2 on all original variables 
 
-If one want to apply T2 on a reduced number of principal components.
-Let's try a 2D example. In the following picture, the relation between Var1 and Var2 is mostly linear, these variables are strongly correlated. Let's suppose that the 1st component of the PCA is sufficient to define the relation.
+Can we apply T2 on a reduced number of (principal) components?
+Let's try a 2D example. In the following picture, the relation between Var1 and Var2 is mostly linear, these variables are strongly correlated. Let's suppose that the 1st component of the PCA is sufficient to define the relation, component 2 being the noisy part of the relation.
 In this case, monitoring any futur observation is like applying a z-score (1 dimension) to this observation compared to the distribution of all past observations projected on the first component axis.
-Component 2 is like the noise
+
+If a loss of correlation happened between Var1 and Var2, it won't be seen on this univariate monitoring because it is the second component that will be impacted.
+
+By extension to more dimensions, we understand that reducing "blindly" the number of components before a TSquared monitoring is not advised. 
 
 <img src="pictures/Capture_pca.PNG" width="300" >
 
-
+Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor as well the residual group of components.
 
 
 #### Can I apply T-Squared to any kind of process?
