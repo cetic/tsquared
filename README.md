@@ -49,8 +49,10 @@ But this should be done cautiously
 PCA 
 1. the PCA defines a new coordonates for each points
 2. the PCA is used to reduce dimensionality by selecting the strongest « principal » components defining the underlying relation between variables
-##### 3. T2 score with PCA on all variables = T2 without PCA 
-4. 
+3. T2 score with PCA on all variables = T2 without PCA 
+4.
+
+<img src="pictures/Capture_pca.PNG" width="300" >
 
 
 
