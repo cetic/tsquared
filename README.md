@@ -15,7 +15,7 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 Hotelling’s T2 is initially for sampled distribution comparison to a reference distribution,
 known as a generalization of the t-statistic for multivariate hypothesis testing.
 
-For monitoring, a single multivariate observation is compared to a reference distribution.
+For monitoring, only a single multivariate observation is compared to a reference distribution.
 This is more a generalization of the z-score.
 
 
@@ -33,34 +33,48 @@ X is in this case the observation (point) in the multivariate space.
 The covariance matrix of the reference multivariate distribution is formed by covariance terms between each dimensions and by variance terms (square of standard deviations) on the diagonal.
 
 ## Questions
-How T-Squared is related to T-Test?
+#### How TSquared is related to T-Test?
 
-How T-Squared is related to Mahalanobis Distance?
+See answer above!
+
+#### How TSquared is related to Mahalanobis Distance?
 
 <img src="pictures/equ_mahalanobis.PNG" width="300" >
 
-Should I use PCA with T-Squared?
+#### Should I use PCA with TSquared?
 
-Can I apply T-Squared to any kind of process?
+Yes, you can!
 
-What are the conditions on parameters to use T-Squared?
+But this should be done cautiously
+PCA 
+1. the PCA defines a new coordonates for each points
+2. the PCA is used to reduce dimensionality by selecting the strongest « principal » components defining the underlying relation between variables
+##### 3. T2 score with PCA on all variables = T2 without PCA 
+4. 
 
-Should I clean dataset before training?
 
 
-Is there a procedure to clean the data?
 
-What variables cause the outlier? 
+#### Can I apply T-Squared to any kind of process?
 
-What is MYT decomposition?
+#### What are the conditions on parameters to use T-Squared?
 
-How deviation types impact T-Squared?
+#### Should I clean dataset before training?
 
-Is a T-Squared monitoring sufficient? Or do I still need univariate monitoring?
 
-UCL, what does that mean in multivariate context?
+#### Is there a procedure to clean the data?
 
-How to compute UCL?
+#### What variables cause the outlier? 
+
+#### What is MYT decomposition?
+
+#### How deviation types impact T-Squared?
+
+#### Is a T-Squared monitoring sufficient? Or do I still need univariate monitoring?
+
+#### UCL, what does that mean in multivariate context?
+
+#### How to compute UCL?
 
 
 
