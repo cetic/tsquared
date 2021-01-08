@@ -53,13 +53,16 @@ But this should be done cautiously
 
 Can we apply T2 on a reduced number of (principal) components?
 Let's try a 2D example. In the following picture, the relation between Var1 and Var2 is mostly linear, these variables are strongly correlated. Let's suppose that the 1st component of the PCA is sufficient to define the relation, component 2 being the noisy part of the relation.
+
+<img src="pictures/Capture_pca.PNG" width="500" >
+
 In this case, monitoring any futur observation is like applying a z-score (1 dimension) to this observation compared to the distribution of all past observations projected on the first component axis.
 
 If a loss of correlation happened between Var1 and Var2, it won't be seen on this univariate monitoring because it is the second component that will be impacted.
 
 By extension to more dimensions, we understand that reducing "blindly" the number of components before a TSquared monitoring is not advised. 
 
-<img src="pictures/Capture_pca.PNG" width="300" >
+
 
 Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor as well the residual group of components.
 
@@ -68,10 +71,17 @@ Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor 
 
 #### What are the conditions on parameters to use T-Squared?
 
-#### Should I clean dataset before training?
+#### Should I clean dataset before training? Is there a procedure to clean the data?
+
+Yes, the cleaner the better
+
+The T-squared procedure can be applied 1 or 2 times to the training set and outliers can be filtered at each round.
+
+The risk to work with a training set not clean is to have an univariate outlier which is an inlier in multivariate, the multivariate UCL being too large.
+
+<img src="pictures/Image_inlier.PNG" width="500" >
 
 
-#### Is there a procedure to clean the data?
 
 #### What variables cause the outlier? 
 
