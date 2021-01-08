@@ -79,7 +79,7 @@ The T-squared procedure can be applied 1 or 2 times to the training set and outl
 
 The risk to work with a training set not clean is to have an univariate outlier which is an inlier in multivariate, the multivariate UCL being too large.
 
-<img src="pictures/Image_inlier.PNG" width="500" >
+<img src="pictures/Image_inlier.png" width="500" >
 
 
 
