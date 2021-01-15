@@ -8,10 +8,16 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 3. [Questions](#quest)  
 	- [How TSquared is related to T-Test?](#ttest)  
 	- [How TSquared is related to Mahalanobis Distance?](#maha)  
-	- [Should I use PCA with TSquared?](#pca)
-	- [How TSquared is related to MCD?](#mcd)
+	- [How TSquared is related to MCD?](#mcd)  
+	- [Should I use PCA with TSquared?](#pca)  
 	- [Can I apply T-Squared to any kind of process? What are the conditions on parameters to use T-Squared?](#conditions)
-	- [Should I clean dataset before training? Is there a procedure to clean the data?](#cleaning)
+	- [Should I clean dataset before training? Is there a procedure to clean the data?](#cleaning)   
+	- [What variables cause the outlier? What is MYT decomposition?](#MYT)  
+	- [How deviation types impact T-Squared?](#types)   
+	- [Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?](#sufficient)  
+	- [UCL, what does that mean in multivariate context? How to compute UCL?](#UCL)  
+
+
 4. [References](#ref) 
 
 ## <a name="features">Features </a>
@@ -56,7 +62,7 @@ The covariance matrix of the reference multivariate distribution is formed by co
 #### <a name="mcd">How TSquared is related to MCD? </a>
 
 MCD = minimum covariance determinant is an algorithm available in the Outlier Detection framework pyOD
-MCD is based on Mahalanobis Squared Distance   (MSD =~  Point-to-Point Hotelling’s T2)
+MCD is based on Mahalanobis Squared Distance   (MSD =~ Hotelling’s T2)
 Based on the distribution of MSD, the training consists to find the subgroup of points (h < n) that minimizes the covariance determinant. This subgroup of points can be thought of as the minimum number of points which must not be outlying (with h > n/2 to keep a sufficient number of point)
 
 -> it is equivalent to the cleaning operation in TSquared
@@ -102,17 +108,13 @@ The risk to work with a training set not clean is to have an univariate outlier 
 
 
 
-#### What variables cause the outlier? 
+#### <a name="MYT"> What variables cause the outlier? What is MYT decomposition?
 
-#### What is MYT decomposition?
+#### <a name="types"> How deviation types impact T-Squared?
 
-#### How deviation types impact T-Squared?
+#### <a name="sufficient"> Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?
 
-#### Is a T-Squared monitoring sufficient? Or do I still need univariate monitoring?
-
-#### UCL, what does that mean in multivariate context?
-
-#### How to compute UCL?
+#### <a name="UCL"> UCL, what does that mean in multivariate context? How to compute UCL?
 
 
 ## <a name="cleaning">References</a>
