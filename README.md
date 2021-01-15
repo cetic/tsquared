@@ -1,11 +1,12 @@
 # TSquared
 Python implementation of Hotelling's T2 for process monitoring + MYT decomposition
 
-##Table of Contents:
+## Table of Contents:
 
-[link text](#features)
+[- Features](#features)
+[- Specific Implementation](#impl)
 
-<a name="features">## Features </a>
+## <a name="features">Features </a>
 
 1. Classical multivariate T2 chart in which Hotelling’s T 2 statistic is computed as a distance of a multivariate observation from the multivariate mean scaled by the covariance matrix of the variables
 2. Python scikit-learn -like implementation
@@ -13,7 +14,7 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 4. MYT decomposition
 
 
-<a name="impl">## Specific Implementation</a>
+## <a name="impl">Specific Implementation</a>
 
 Hotelling’s T2 is initially for sampled distribution comparison to a reference distribution,
 known as a generalization of the t-statistic for multivariate hypothesis testing.
