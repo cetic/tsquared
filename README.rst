@@ -1,6 +1,11 @@
 # TSquared
 Python implementation of Hotelling's T2 for process monitoring + MYT decomposition
 
+**Table of Contents**\ :
+
+
+* `Features <#Features>`_
+* `API Cheatsheet & Reference <#api-cheatsheet--reference>`_
 
 ## Features
 
