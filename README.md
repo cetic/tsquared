@@ -4,10 +4,12 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 ## Table of Contents:
 
 [- Features](#features)
-
 [- Specific Implementation](#impl)
-
 [- Questions](#quest)
+[	- How TSquared is related to T-Test?](#ttest)
+[	- How TSquared is related to Mahalanobis Distance?](#maha)
+[	- Should I use PCA with TSquared?](#pca)
+
 
 ## <a name="features">Features </a>
 
@@ -23,13 +25,17 @@ Hotelling’s T2 is initially for sampled distribution comparison to a reference
 known as a generalization of the t-statistic for multivariate hypothesis testing.
 
 For monitoring, only a single multivariate observation is compared to a reference distribution.
-This is more a generalization of the z-score.
 
+## <a name="quest"> Questions </a>
+#### <a name="ttest">How TSquared is related to T-Test? </a>
+
+Hotelling's T2 is a generalization of the t-statistic for multivariate hypothesis testing
+When a single multivariate observation is compared to a reference distribution, it can be viewed as a generalization of the z-score.
+The difference is the nature of the entities (point >< distribution) that are considered in the distance computation and in the denominator of the equation also.
 
 <img src="pictures/z-score.jpg" width="300" >
 
-### Relationship between z-score and TSquared 
-
+What's the relationship with z-score then?
 
 <a href="pictures/equ_zscore.png"><img src="pictures/equ_zscore.png" width="300" ></a>
 
@@ -39,16 +45,12 @@ X is in this case the observation (point) in the multivariate space.
 
 The covariance matrix of the reference multivariate distribution is formed by covariance terms between each dimensions and by variance terms (square of standard deviations) on the diagonal.
 
-## <a name="features"> Questions </a>
-#### How TSquared is related to T-Test?
 
-See answer above!
-
-#### How TSquared is related to Mahalanobis Distance?
+#### <a name="maha">How TSquared is related to Mahalanobis Distance?</a>
 
 <img src="pictures/equ_mahalanobis.PNG" width="300" >
 
-#### Should I use PCA with TSquared?
+#### <a name="pca">Should I use PCA with TSquared? </a>
 
 Yes, you can!
 
