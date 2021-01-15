@@ -9,6 +9,7 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 	- [How TSquared is related to T-Test?](#ttest)  
 	- [How TSquared is related to Mahalanobis Distance?](#maha)  
 	- [Should I use PCA with TSquared?](#pca)
+	- [How TSquared is related to MCD?](#mcd)
 	- [Can I apply T-Squared to any kind of process? What are the conditions on parameters to use T-Squared?](#conditions)
 	- [Should I clean dataset before training? Is there a procedure to clean the data?](#cleaning)
 4. [References](#ref) 
@@ -51,6 +52,15 @@ The covariance matrix of the reference multivariate distribution is formed by co
 #### <a name="maha">How TSquared is related to Mahalanobis Distance?</a>
 
 <img src="pictures/equ_mahalanobis.PNG" width="300" >
+
+#### <a name="mcd">How TSquared is related to MCD? </a>
+
+MCD = minimum covariance determinant is an algorithm available in the Outlier Detection framework pyOD
+MCD is based on Mahalanobis Squared Distance   (MSD =~  Point-to-Point Hotelling’s T2)
+Based on the distribution of MSD, the training consists to find the subgroup of points (h < n) that minimizes the covariance determinant. This subgroup of points can be thought of as the minimum number of points which must not be outlying (with h > n/2 to keep a sufficient number of point)
+
+-> it is equivalent to the cleaning operation in TSquared
+
 
 #### <a name="pca">Should I use PCA with TSquared? </a>
 
