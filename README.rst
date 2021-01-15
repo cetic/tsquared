@@ -1,13 +1,15 @@
-# TSquared
+TSquared
+========
+
 Python implementation of Hotelling's T2 for process monitoring + MYT decomposition
 
 **Table of Contents**\ :
 
 
 * `Features <#Features>`_
-* `API Cheatsheet & Reference <#api-cheatsheet--reference>`_
+* `Specific Implementation <#Specific Implementation>`_
 
-## Features
+** Features **\ :
 
 1. Classical multivariate T2 chart in which Hotelling’s T 2 statistic is computed as a distance of a multivariate observation from the multivariate mean scaled by the covariance matrix of the variables
 2. Python scikit-learn -like implementation
@@ -15,7 +17,7 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 4. MYT decomposition
 
 
-## Specific Implementation
+** Specific Implementation **\ :
 
 Hotelling’s T2 is initially for sampled distribution comparison to a reference distribution,
 known as a generalization of the t-statistic for multivariate hypothesis testing.
@@ -26,7 +28,7 @@ This is more a generalization of the z-score.
 
 <img src="pictures/z-score.jpg" width="300" >
 
-### Relationship between z-score and TSquared 
+*** Relationship between z-score and TSquared  ***\
 
 
 <a href="pictures/equ_zscore.png"><img src="pictures/equ_zscore.png" width="300" ></a>
@@ -37,7 +39,7 @@ X is in this case the observation (point) in the multivariate space.
 
 The covariance matrix of the reference multivariate distribution is formed by covariance terms between each dimensions and by variance terms (square of standard deviations) on the diagonal.
 
-## Questions
+** Questions **\
 #### How TSquared is related to T-Test?
 
 See answer above!
@@ -101,7 +103,7 @@ The risk to work with a training set not clean is to have an univariate outlier 
 #### How to compute UCL?
 
 
-## References
+** References **\
 
 - <cite> Decomposition of T2 for Multivariate Control Chart Interpretation, ROBERT L. MASON, NOLA D. TRACY and JOHN C. YOUNG </cite>
 
