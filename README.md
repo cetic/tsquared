@@ -4,7 +4,10 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 ## Table of Contents:
 
 [- Features](#features)
+
 [- Specific Implementation](#impl)
+
+[- Questions](#quest)
 
 ## <a name="features">Features </a>
 
@@ -36,7 +39,7 @@ X is in this case the observation (point) in the multivariate space.
 
 The covariance matrix of the reference multivariate distribution is formed by covariance terms between each dimensions and by variance terms (square of standard deviations) on the diagonal.
 
-## Questions
+## <a name="features"> Questions </a>
 #### How TSquared is related to T-Test?
 
 See answer above!
