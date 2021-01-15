@@ -3,12 +3,12 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 
 ## Table of Contents:
 
-[- Features](#features)
-[- Specific Implementation](#impl)
-[- Questions](#quest)
-[	- How TSquared is related to T-Test?](#ttest)
-[	- How TSquared is related to Mahalanobis Distance?](#maha)
-[	- Should I use PCA with TSquared?](#pca)
+[- Features](#features) 
+[- Specific Implementation](#impl) 
+[- Questions](#quest) 
+[	- How TSquared is related to T-Test?](#ttest) 
+[	- How TSquared is related to Mahalanobis Distance?](#maha) 
+[	- Should I use PCA with TSquared?](#pca) 
 
 
 ## <a name="features">Features </a>
