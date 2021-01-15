@@ -211,7 +211,11 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		X = self._check_test_inputs(X)
 
 		X_centered = X - self.mean_ # Zero-centered data.
-		inverse_cov = np.linalg.inv(self.cov_) # Inverse covariance matrix.
+		inverse_cov = np.linalg.pinv(self.cov_) # Inverse covariance matrix.
+		# previously inverse_cov = np.linalg.inv(self.cov_) but failed on singular matrix
+		# explanation    https://stackoverflow.com/questions/49357417/why-is-numpy-linalg-pinv-preferred-over-numpy-linalg-inv-for-creating-invers/49364727
+		
+		
 		t2_scores = np.einsum('ij,ij->i', X_centered @ inverse_cov, X_centered)
 		# Equivalent to:
 		# ```
@@ -318,7 +322,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		t2_scores = self.score_samples(X)
 
-		return np.where(t2_scores > self.ucl(X), -1, 1)
+		return np.where(t2_scores > self.ucl(X),  -1, 1)
 
 	def transform(self, X):
 		"""
