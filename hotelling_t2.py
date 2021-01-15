@@ -353,6 +353,62 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		t2_scores = self.score_samples(X)
 
 		return X[t2_scores <= self.ucl(X)]
+		
+	def cleanfit(self, X,n=5):
+		"""
+		Recursively remove outliers until conditions are encountered, and fit
+
+		Parameters
+		----------
+		X : {array-like, sparse matrix}, shape (n_samples, n_features)
+			Training set of samples, where n_samples is the number of samples and
+			n_features is the number of features.
+		n : stop criteria  - minimum number of outliers (default=5)  
+
+		Returns
+		-------
+		self : object
+			Returns the instance itself.
+		X_filtered : array-like, shape (n_samples_filtered, n_features)
+			Returns inliers.
+		n_iterations: number of iterations of cleaning
+
+		Raises
+		------
+		ValueError
+			If the number of features of `X` is not equal to the number of
+			features of the training set, that is `self.n_features_`.
+		"""
+
+		X = self._check_test_inputs(X)
+		
+		#variable initialisation
+        if n_ is not None:
+            n_ = n
+        else:
+            n_ = 5
+		
+		outliers2remove=X.shape[0]/2  #variable - init to the maximum allowed points to be removed
+		totpoints=X.shape[0] #const
+		Xtrans2=X 
+		iter_=0
+		
+		self.set_default_ucl('not indep')
+		
+		#recursivity
+        while ((outliers2remove>n_) and (Xtrans2.shape[0] > totpoints/2)):
+          Xtrans=Xtrans2
+          self.fit(Xtrans)
+          Xtrans2=self.transform(Xtrans)
+          outliers2remove=Xtrans.shape[0]-Xtrans2.shape[0]
+		  iter_+=1
+   
+        self.set_default_ucl('indep')
+        self.fit(Xtrans2)
+
+		t2_scores = self.score_samples(X)
+
+		return self,Xtrans2,iter_
 
 	def set_default_ucl(self, ucl):
 		"""
