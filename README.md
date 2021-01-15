@@ -8,8 +8,10 @@ Python implementation of Hotelling's T2 for process monitoring + MYT decompositi
 3. [Questions](#quest)  
 	- [How TSquared is related to T-Test?](#ttest)  
 	- [How TSquared is related to Mahalanobis Distance?](#maha)  
-	- [Should I use PCA with TSquared?](#pca)  
-
+	- [Should I use PCA with TSquared?](#pca)
+	- [Can I apply T-Squared to any kind of process? What are the conditions on parameters to use T-Squared?](#conditions)
+	- [Should I clean dataset before training? Is there a procedure to clean the data?](#cleaning)
+4. [References](#ref) 
 
 ## <a name="features">Features </a>
 
@@ -76,11 +78,9 @@ By extension to more dimensions, we understand that reducing "blindly" the numbe
 Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor as well the residual group of components in a separated monitoring.
 
 
-#### Can I apply T-Squared to any kind of process?
+#### <a name="conditions">Can I apply T-Squared to any kind of process? What are the conditions on parameters to use T-Squared?</a>
 
-#### What are the conditions on parameters to use T-Squared?
-
-#### Should I clean dataset before training? Is there a procedure to clean the data?
+#### <a name="cleaning">Should I clean dataset before training? Is there a procedure to clean the data?</a>
 
 Yes, the cleaner the better
 
@@ -105,7 +105,7 @@ The risk to work with a training set not clean is to have an univariate outlier 
 #### How to compute UCL?
 
 
-## References
+## <a name="cleaning">References</a>
 
 - <cite> Decomposition of T2 for Multivariate Control Chart Interpretation, ROBERT L. MASON, NOLA D. TRACY and JOHN C. YOUNG </cite>
 
