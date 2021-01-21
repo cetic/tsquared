@@ -96,6 +96,9 @@ Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor 
 
 #### <a name="conditions">Can I apply T-Squared to any kind of process? What are the conditions on parameters to use T-Squared?</a>
 
+The basic assumption is that all variables should be normally distributed. 
+However, the algorithm is tolerant to some extent if the distributions are not perfectly normal.
+
 #### <a name="cleaning">Should I clean dataset before training? Is there a procedure to clean the data?</a>
 
 Yes, the cleaner the better
