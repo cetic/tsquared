@@ -85,11 +85,9 @@ Let's try a 2D example. In the following picture, the relation between Var1 and 
 
 In this case, monitoring any futur observation is like applying a z-score (1 dimension) to this observation compared to the distribution of all past observations projected on the first component axis.
 
-If a loss of correlation happened between Var1 and Var2, it won't be seen on this univariate monitoring because it is the second component that will be impacted.
+If a loss of correlation happened between Var1 and Var2, it won't be seen on this univariate monitoring because it is the second component that will be impacted. This can happened if the senor capturing Var2 is defectuous. 
 
-By extension to more dimensions, we understand that reducing "blindly" the number of components before a TSquared monitoring is not advised. 
-
-
+By extension to more dimensions, we understand that reducing "blindly" the number of components before a TSquared monitoring is not advised. It is certainly not a thing to do in case of sensors validation.
 
 Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor as well the residual group of components in a separated monitoring.
 
@@ -113,12 +111,16 @@ The risk to work with a training set not clean is to have an univariate outlier 
 
 #### <a name="MYT"> What variables cause the outlier? What is MYT decomposition?
 
-#### <a name="types"> How deviation types impact T-Squared?
+#### <a name="types"> How deviation types impact TSquared?
 
 #### <a name="sufficient"> Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?
 
 #### <a name="UCL"> UCL, what does that mean in multivariate context? How to compute UCL?
 
+#### <a name="boxcox"> My data are not normally distributed. Does it help to apply a boxcox transformation on each variables?
+	
+The experiment was done using TSquared autocleaning function and boxcox transformation on each variables.
+	
 
 ## <a name="cleaning">References</a>
 
