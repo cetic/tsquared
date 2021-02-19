@@ -4,6 +4,9 @@ from sklearn.utils.validation import check_is_fitted
 
 import numpy as np
 from scipy import stats
+from scipy.stats import lognorm
+import math
+from scipy import stats
 
 class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 	"""Hotelling's T-squared test.
@@ -354,10 +357,17 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		return X[t2_scores <= self.ucl(X)]
 		
-	def cleanfit(self, X,n=5):
+	def cleanfit(self, X,res=1,iter=-1):
 		"""
-		Recursively remove outliers until conditions are encountered, and fit
-
+		
+		Recursively remove outliers until conditions are encountered (including Henze-Zirkler test), and fit
+		->Merge the several methods in one code
+				- minimum number of outliers detected for stopping iterations
+				- number of iterations decided by the user
+				- max number of iterations based on the data size
+				- smart cleaning based on normality coefficient
+					- door open for other coefs
+		
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
@@ -380,36 +390,63 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			features of the training set, that is `self.n_features_`.
 		"""
 
-		X = self._check_test_inputs(X)
+		#####INIT###self.fit(X)#######
+		X = self._check_train_inputs(X)
+		self.n_samples_, self.n_features_ = X.shape
+		self.ucl_indep_ = self._ucl_indep(self.n_samples_, self.n_features_,
+			alpha=self.alpha)
+		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_,
+			self.n_features_, alpha=self.alpha)
+		self.X_fit_ = X		
 		
-		#variable initialisation
-        if n_ is not None:
-            n_ = n
-        else:
-            n_ = 5
 		
-		outliers2remove=X.shape[0]/2  #variable - init to the maximum allowed points to be removed
-		totpoints=X.shape[0] #const
-		Xtrans2=X 
-		iter_=0
+		#cleanfit specific initialisation
+			
+		_res=self.n_samples_/2  #variable - init to the maximum allowed points to be removed
+		TOTP=self.n_samples_    #CONST - Initial number of points
+		Xclean2=X          #Init second cleaned X for boostraping the iteration
+		_iter=0
+		hzprev=100		   #Empiricaly fixed based on observations on Pyod dataset - hypothesis of normality rejected if too large (generally >300)
+		_continue=1
+		
+		hz,pval,flag=self.HenzeZirkler(Xclean2)
+		if(hz<hzprev):
+			_continue=1
+			hzprev=hz
+		else:
+			_continue=0
+		#print("hz0",hz)
 		
 		self.set_default_ucl('not indep')
 		
 		#recursivity
-        while ((outliers2remove>n_) and (Xtrans2.shape[0] > totpoints/2)):
-          Xtrans=Xtrans2
-          self.fit(Xtrans)
-          Xtrans2=self.transform(Xtrans)
-          outliers2remove=Xtrans.shape[0]-Xtrans2.shape[0]
-		  iter_+=1
+		while ((_res>res) and (_iter!=iter) and (Xclean2.shape[0] > TOTP/2) and _continue==1):
+			Xclean=Xclean2
+			
+			self.fit(Xclean)
+			Xclean2=self.transform(Xclean)
+			hz,pval,flag=self.HenzeZirkler(Xclean2)
+			if(hz<hzprev):
+				_continue=1
+				hzprev=hz
+			else:
+				if(iter > -1):   # If iter is given, it discards criteria on HZ coef
+					_continue=1
+				else:
+					_continue=0
+			_res=Xclean.shape[0]-Xclean2.shape[0]
+			#print("hz",_iter,hz)
+			_iter+=1
    
-        self.set_default_ucl('indep')
-        self.fit(Xtrans2)
+		self.set_default_ucl('indep')
+		self.fit(Xclean2)
 
 		t2_scores = self.score_samples(X)
 
-		return self,Xtrans2,iter_
-
+		return self,Xclean2,_iter,hz
+	
+	
+		
 	def set_default_ucl(self, ucl):
 		"""
 		Set the default upper control limit (UCL) to either 'auto', 'indep' or
@@ -674,7 +711,139 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				" the number of features of the training set.")
 
 		return X
+		
+		
+	def HenzeZirkler(self,X, alpha=.05):
+	
+		#from https://github.com/CPernet/Robust-Correlations/blob/master/HZmvntest.m
+		#from https://pingouin-stats.org/generated/pingouin.multivariate_normality.html
+	
+		"""Henze-Zirkler multivariate normality test.
+		Parameters
+		----------
+		X : np.array
+			Data matrix of shape (n_samples, n_features).
+		alpha : float
+			Significance level.
+		Returns
+		-------
+		hz : float
+			The Henze-Zirkler test statistic.
+		pval : float
+			P-value.
+		normal : boolean
+			True if X comes from a multivariate normal distribution.
+		See Also
+		--------
+		normality : Test the univariate normality of one or more variables.
+		homoscedasticity : Test equality of variance.
+		sphericity : Mauchly's test for sphericity.
+		Notes
+		-----
+		The Henze-Zirkler test [1]_ has a good overall power against alternatives
+		to normality and works for any dimension and sample size.
+		Adapted to Python from a Matlab code [2]_ by Antonio Trujillo-Ortiz and
+		tested against the
+		`MVN <https://cran.r-project.org/web/packages/MVN/MVN.pdf>`_ R package.
+		Rows with missing values are automatically removed.
+		References
+		----------
+		.. [1] Henze, N., & Zirkler, B. (1990). A class of invariant consistent
+		   tests for multivariate normality. Communications in Statistics-Theory
+		   and Methods, 19(10), 3595-3617.
+		.. [2] Trujillo-Ortiz, A., R. Hernandez-Walls, K. Barba-Rojo and L.
+		   Cupul-Magana. (2007). HZmvntest: Henze-Zirkler's Multivariate
+		   Normality Test. A MATLAB file.
+		Examples
+		--------
+		>>> import pingouin as pg
+		>>> data = pg.read_dataset('multivariate')
+		>>> X = data[['Fever', 'Pressure', 'Aches']]
+		>>> pg.multivariate_normality(X, alpha=.05)
+		HZResults(hz=0.5400861018514641, pval=0.7173686509624891, normal=True)
+		"""
+		
 
+		# Check input and remove missing values
+	#    X = np.asarray(X)
+	#    assert X.ndim == 2, 'X must be of shape (n_samples, n_features).'
+	#    X = X[~np.isnan(X).any(axis=1)]
+		
+		n, p = X.shape
+		# undersampling if length too long
+		#print(n,p)
+		if n>9999:
+			factor=math.ceil(n/10000)
+			X=X[::factor,:]
+
+
+		n, p = X.shape
+		#print(n,p)
+		assert n >= 3, 'X must have at least 3 rows.'
+		assert p >= 2, 'X must have at least two columns.'
+
+		
+		# Covariance matrix
+		S = np.cov(X, rowvar=False, bias=True) #X.T, ddof=1)
+		
+		S_inv = np.linalg.pinv(S).astype(X.dtype)  # Preserving original dtype
+		difT = X - X.mean(0)
+		
+		
+		# Squared-Mahalanobis distances
+		
+		#Dj = np.diag(np.linalg.multi_dot([difT, S_inv, difT.T]))
+		#T2=np.einsum('ij,ij->i', difT @ S_inv, difT)
+		#print("T2.shape",T2.shape)
+		T2=np.linalg.multi_dot([difT, S_inv, difT.T])
+		
+		
+		Dj = np.diag(T2)
+		
+		Y = np.linalg.multi_dot([X, S_inv, X.T])
+		
+		Djk = -2 * Y.T + np.repeat(np.diag(Y.T), n).reshape(n, -1) + \
+			np.tile(np.diag(Y.T), (n, 1))
+		
+		# Smoothing parameter
+		b = 1 / (np.sqrt(2)) * ((2 * p + 1) / 4)**(1 / (p + 4)) * \
+			(n**(1 / (p + 4)))
+		
+		# Is matrix full-rank (columns are linearly independent)?
+		if np.linalg.matrix_rank(S) == p:
+			hz = n * (1 / (n**2) * np.sum(np.sum(np.exp(-(b**2) / 2 * Djk))) - 2
+					  * ((1 + (b**2))**(-p / 2)) * (1 / n)
+					  * (np.sum(np.exp(-((b**2) / (2 * (1 + (b**2)))) * Dj)))
+					  + ((1 + (2 * (b**2)))**(-p / 2)))
+		else:
+			hz = n * 4
+
+		wb = (1 + b**2) * (1 + 3 * b**2)
+		a = 1 + 2 * b**2
+		# Mean and variance
+		mu = 1 - a**(-p / 2) * (1 + p * b**2 / a + (p * (p + 2)
+													* (b**4)) / (2 * a**2))
+		si2 = 2 * (1 + 4 * b**2)**(-p / 2) + 2 * a**(-p) * \
+			(1 + (2 * p * b**4) / a**2 + (3 * p * (p + 2) * b**8) / (4 * a**4)) \
+			- 4 * wb**(-p / 2) * (1 + (3 * p * b**4) / (2 * wb)
+								  + (p * (p + 2) * b**8) / (2 * wb**2))
+		
+		# Lognormal mean and variance
+		pmu = np.log(np.sqrt(mu**4 / (si2 + mu**2)))
+		psi = np.sqrt(np.log((si2 + mu**2) / mu**2))
+		
+		# P-value
+		pval = lognorm.sf(hz, psi, scale=np.exp(pmu))
+		normal = True if pval > alpha else False
+
+		#HZResults = namedtuple('HZResults', ['hz', 'pval', 'normal'])
+		#return HZResults(hz=hz, pval=pval, normal=normal)
+		return hz,pval,normal
+	
+	
+	
+	
+	
 if __name__ == '__main__':
 	import matplotlib.pyplot as plt
 
