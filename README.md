@@ -35,6 +35,8 @@ known as a generalization of the t-statistic for multivariate hypothesis testing
 
 For monitoring, only a single multivariate observation is compared to a reference distribution.
 
+	Load TSquared
+
 ## <a name="quest"> Questions </a>
 #### <a name="ttest">How TSquared is related to T-Test? </a>
 
