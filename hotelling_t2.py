@@ -1,4 +1,4 @@
-from sklearn.base import BaseEstimator, OutlierMixin, TransformerMixin
+from sklearn.base import BaseEstimator
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
@@ -7,25 +7,26 @@ from scipy import stats
 from scipy.stats import lognorm
 import math
 from scipy import stats
+import pingouin as pg
 
-class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
-	"""Hotelling's T-squared test.
 
-	Hotelling's T-squared test is an unsupervised multivariate outlier
+class HotellingT2(BaseEstimator):
+	"""Hotelling's T2 test.
+
+	Hotelling's T2 test is an unsupervised multivariate outlier
 	detection.
 
 	When fitting on a (clean) training set, the real distribution, supposed to
-	be a multivariate normal distribution, is estimated. In order to achieve
-	this, these parameters are estimated:
+	be a multivariate normal distribution, is estimated with these parameters:
 
-	- the empirical mean for each feature;
+	- the empirical mean for each variables;
 	- the sample covariance matrix.
 
 	In addition, two upper control limits (UCLs) are computed. One of these is
 	chosen to classify new samples. See the "Attributes" section for an
 	explanation of the difference between these two limits: ucl_indep_ and
-	ucl_not_indep_. Note that the first one is the UCL used by default, but you
-	can change this behavior by calling the set_default_ucl method.
+	ucl_not_indep_. Note that the first one is the UCL used by default, 
+	but this behavior can be changed by calling the set_default_ucl method.
 
 	When predicting, for each sample x from a test set, a T-squared score is
 	computed and compared to the default upper control limit. If this score
@@ -117,7 +118,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 	Examples
 	--------
 	>>> import numpy as np
-	>>> from hotelling_t2 import HotellingT2
+	>>> from TSquared.hotelling_t2 import HotellingT2
 	>>> true_mean = np.array([0, 0])
 	>>> true_cov = np.array([[.8, .3],
 	...                      [.3, .4]])
@@ -142,7 +143,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	def fit(self, X, y=None):
 		"""
-		Fit Hotelling's T-squared. Specifically, compute the mean vector, the
+		Fit Hotelling's T2. Specifically, compute the mean vector, the
 		covariance matrix on X and the upper control limits.
 
 		Parameters
@@ -389,7 +390,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			If the number of features of `X` is not equal to the number of
 			features of the training set, that is `self.n_features_`.
 		"""
-
+		
 		#####INIT###self.fit(X)#######
 		X = self._check_train_inputs(X)
 		self.n_samples_, self.n_features_ = X.shape
@@ -398,6 +399,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_,
 			self.n_features_, alpha=self.alpha)
 		self.X_fit_ = X		
+		self.cov_ = np.cov(X.T, ddof=1)
 		
 		
 		#cleanfit specific initialisation
@@ -408,15 +410,20 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		_iter=0
 		hzprev=100		   #Empiricaly fixed based on observations on Pyod dataset - hypothesis of normality rejected if too large (generally >300)
 		_continue=1
-		
-		hz,pval,flag=self.HenzeZirkler(Xclean2)
-		if(hz<hzprev):
-			_continue=1
-			hzprev=hz
+		print("****",iter,"****")
+		if(iter < 0):
+			print("****",iter,"****")
+			hz,pval,flag=pg.multivariate_normality(Xclean2)
+			if(hz<hzprev):
+				_continue=1
+				hzprev=hz
+			else:
+				_continue=0
+			print("hz",_iter,hz)
+			print("det",_iter,np.linalg.det(self.cov_))
 		else:
-			_continue=0
-		#print("hz0",hz)
-		
+			hz=1
+			det=1
 		self.set_default_ucl('not indep')
 		
 		#recursivity
@@ -425,18 +432,23 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			
 			self.fit(Xclean)
 			Xclean2=self.transform(Xclean)
-			hz,pval,flag=self.HenzeZirkler(Xclean2)
-			if(hz<hzprev):
+			if(iter > -1):   # If iter is given, it discards criteria on HZ coef
 				_continue=1
-				hzprev=hz
 			else:
-				if(iter > -1):   # If iter is given, it discards criteria on HZ coef
+				hz,pval,flag=pg.multivariate_normality(Xclean2)
+				
+				if(hz<hzprev):
 					_continue=1
+					hzprev=hz
 				else:
 					_continue=0
+					
 			_res=Xclean.shape[0]-Xclean2.shape[0]
-			#print("hz",_iter,hz)
 			_iter+=1
+			
+			print("hz",_iter,hz)
+			print("det",_iter,np.linalg.det(self.cov_))
+			
    
 		self.set_default_ucl('indep')
 		self.fit(Xclean2)
@@ -634,7 +646,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		X = check_array(X,
 			accept_sparse=True,
 			dtype=[np.float64, np.float32],
-			force_all_finite=True,
+			force_all_finite=False,
 			ensure_2d=True,
 			estimator=self
 		)
@@ -711,138 +723,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				" the number of features of the training set.")
 
 		return X
-		
-		
-	def HenzeZirkler(self,X, alpha=.05):
-	
-		#from https://github.com/CPernet/Robust-Correlations/blob/master/HZmvntest.m
-		#from https://pingouin-stats.org/generated/pingouin.multivariate_normality.html
-	
-		"""Henze-Zirkler multivariate normality test.
-		Parameters
-		----------
-		X : np.array
-			Data matrix of shape (n_samples, n_features).
-		alpha : float
-			Significance level.
-		Returns
-		-------
-		hz : float
-			The Henze-Zirkler test statistic.
-		pval : float
-			P-value.
-		normal : boolean
-			True if X comes from a multivariate normal distribution.
-		See Also
-		--------
-		normality : Test the univariate normality of one or more variables.
-		homoscedasticity : Test equality of variance.
-		sphericity : Mauchly's test for sphericity.
-		Notes
-		-----
-		The Henze-Zirkler test [1]_ has a good overall power against alternatives
-		to normality and works for any dimension and sample size.
-		Adapted to Python from a Matlab code [2]_ by Antonio Trujillo-Ortiz and
-		tested against the
-		`MVN <https://cran.r-project.org/web/packages/MVN/MVN.pdf>`_ R package.
-		Rows with missing values are automatically removed.
-		References
-		----------
-		.. [1] Henze, N., & Zirkler, B. (1990). A class of invariant consistent
-		   tests for multivariate normality. Communications in Statistics-Theory
-		   and Methods, 19(10), 3595-3617.
-		.. [2] Trujillo-Ortiz, A., R. Hernandez-Walls, K. Barba-Rojo and L.
-		   Cupul-Magana. (2007). HZmvntest: Henze-Zirkler's Multivariate
-		   Normality Test. A MATLAB file.
-		Examples
-		--------
-		>>> import pingouin as pg
-		>>> data = pg.read_dataset('multivariate')
-		>>> X = data[['Fever', 'Pressure', 'Aches']]
-		>>> pg.multivariate_normality(X, alpha=.05)
-		HZResults(hz=0.5400861018514641, pval=0.7173686509624891, normal=True)
-		"""
-		
-
-		# Check input and remove missing values
-	#    X = np.asarray(X)
-	#    assert X.ndim == 2, 'X must be of shape (n_samples, n_features).'
-	#    X = X[~np.isnan(X).any(axis=1)]
-		
-		n, p = X.shape
-		# undersampling if length too long
-		#print(n,p)
-		if n>9999:
-			factor=math.ceil(n/10000)
-			X=X[::factor,:]
-
-
-		n, p = X.shape
-		#print(n,p)
-		assert n >= 3, 'X must have at least 3 rows.'
-		assert p >= 2, 'X must have at least two columns.'
-
-		
-		# Covariance matrix
-		S = np.cov(X, rowvar=False, bias=True) #X.T, ddof=1)
-		
-		S_inv = np.linalg.pinv(S).astype(X.dtype)  # Preserving original dtype
-		difT = X - X.mean(0)
-		
-		
-		# Squared-Mahalanobis distances
-		
-		#Dj = np.diag(np.linalg.multi_dot([difT, S_inv, difT.T]))
-		#T2=np.einsum('ij,ij->i', difT @ S_inv, difT)
-		#print("T2.shape",T2.shape)
-		T2=np.linalg.multi_dot([difT, S_inv, difT.T])
-		
-		
-		Dj = np.diag(T2)
-		
-		Y = np.linalg.multi_dot([X, S_inv, X.T])
-		
-		Djk = -2 * Y.T + np.repeat(np.diag(Y.T), n).reshape(n, -1) + \
-			np.tile(np.diag(Y.T), (n, 1))
-		
-		# Smoothing parameter
-		b = 1 / (np.sqrt(2)) * ((2 * p + 1) / 4)**(1 / (p + 4)) * \
-			(n**(1 / (p + 4)))
-		
-		# Is matrix full-rank (columns are linearly independent)?
-		if np.linalg.matrix_rank(S) == p:
-			hz = n * (1 / (n**2) * np.sum(np.sum(np.exp(-(b**2) / 2 * Djk))) - 2
-					  * ((1 + (b**2))**(-p / 2)) * (1 / n)
-					  * (np.sum(np.exp(-((b**2) / (2 * (1 + (b**2)))) * Dj)))
-					  + ((1 + (2 * (b**2)))**(-p / 2)))
-		else:
-			hz = n * 4
-
-		wb = (1 + b**2) * (1 + 3 * b**2)
-		a = 1 + 2 * b**2
-		# Mean and variance
-		mu = 1 - a**(-p / 2) * (1 + p * b**2 / a + (p * (p + 2)
-													* (b**4)) / (2 * a**2))
-		si2 = 2 * (1 + 4 * b**2)**(-p / 2) + 2 * a**(-p) * \
-			(1 + (2 * p * b**4) / a**2 + (3 * p * (p + 2) * b**8) / (4 * a**4)) \
-			- 4 * wb**(-p / 2) * (1 + (3 * p * b**4) / (2 * wb)
-								  + (p * (p + 2) * b**8) / (2 * wb**2))
-		
-		# Lognormal mean and variance
-		pmu = np.log(np.sqrt(mu**4 / (si2 + mu**2)))
-		psi = np.sqrt(np.log((si2 + mu**2) / mu**2))
-		
-		# P-value
-		pval = lognorm.sf(hz, psi, scale=np.exp(pmu))
-		normal = True if pval > alpha else False
-
-		#HZResults = namedtuple('HZResults', ['hz', 'pval', 'normal'])
-		#return HZResults(hz=hz, pval=pval, normal=normal)
-		return hz,pval,normal
-	
-	
-	
-	
+			
 	
 if __name__ == '__main__':
 	import matplotlib.pyplot as plt
@@ -869,7 +750,7 @@ if __name__ == '__main__':
 	print(f"True mean vector: {true_mean}")
 	print(f"True covariance matrix:\n{true_cov}")
 
-	print("\n--- Hotelling's T-squared fitting on the training set---\n")
+	print("\n--- Hotelling's T2 fitting on the training set---\n")
 
 	hotelling = HotellingT2()
 	hotelling.fit(train)
@@ -878,12 +759,12 @@ if __name__ == '__main__':
 	print(f"Computed covariance matrix:\n{hotelling.cov_}")
 	print(f"Hotelling's T-squared UCL: {hotelling.ucl(test)}")
 
-	print("\n--- Hotelling's T-squared scores on the test set ---\n")
+	print("\n--- Hotelling's T2 scores on the test set ---\n")
 
 	t2_scores = hotelling.score_samples(test)
 	scaled_t2_scores = hotelling.scaled_score_samples(test)
 
-	print(f"Hotelling's T-squared score for each sample:\n{t2_scores}")
+	print(f"Hotelling's T2 score for each sample:\n{t2_scores}")
 	print(f"Scaled Hotelling's T-squared score for each sample:"
 		f"\n{scaled_t2_scores}")
 
@@ -894,14 +775,14 @@ if __name__ == '__main__':
 
 	print(f"Detected outliers:\n{outliers}")
 
-	#print("\n--- Plot of Hotelling's T-squared scores on the test set ---\n")
+	#print("\n--- Plot of Hotelling's T2 scores on the test set ---\n")
 
 	fig, ax = plt.subplots(figsize=(14, 8))
 	plt.scatter(range(scaled_t2_scores.size), scaled_t2_scores)
 	ucl_line = plt.axhline(y=0.1, color='r', linestyle='-')
-	ax.set_title('Scaled Hotelling\'s T-squared scores')
+	ax.set_title('Scaled Hotelling\'s T2 scores')
 	ax.set_xlabel('Index')
-	ax.set_ylabel('Scaled Hotelling\'s T-squared score')
+	ax.set_ylabel('Scaled Hotelling\'s T2 score')
 	ucl_line.set_label('UCL')
 	plt.legend()
 	fig.tight_layout()
