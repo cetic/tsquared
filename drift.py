@@ -133,7 +133,7 @@ class Drift(BaseEstimator):
 		self.inputs=[]
 		self.dictmodel={}
 
-	def fit(self, df,targets,inputs, y=None):
+	def fit(self, df,targets,inputs,feature_selection=True,feature_to_keep=[], y=None):
 		"""
 		Fit Drift. 
 
@@ -143,7 +143,10 @@ class Drift(BaseEstimator):
 			Training set of samples, where n_samples is the number of samples
 			and n_features is the number of features. It should be clean and
 			free of outliers.
-
+		feature_selection:bool (default=True)
+			performs a spearman correlation on entries and keeps correlations higher than 0.1
+		feature_to_keep: list
+			if feature_selection active, avoids the filtration of customed features
 		y : None
 			Not used, present for scikit-learn's API consistency by convention.
 
@@ -161,27 +164,43 @@ class Drift(BaseEstimator):
 		self.inputs=inputs
 		dfresidus=pandas.DataFrame()
 
-		
+		if feature_selection==True:
+			print('Calculation of Correlation matrix based on Spearman method for feature selection')
+			dfcorr=df[inputs].corr(method='spearman')
+
 		index=0
 		for target in targets: #['PF309A[bar r]']: #
 			index+=1
 			self.dictmodel[target]={}  # init imbricated dictionary			
-			local_in=inputs[:]
-			print('*******************************************')
-			print("TARGET=",target)
-			local_in.remove(target)
-			print('inputs=',local_in)
+			
+			
+			if feature_selection==True:
+				
+				local_corrdic=dfcorr[target].to_frame().to_dict('dict')
+				local_in=[k for (k,v) in local_corrdic[target].items() if abs(v) > 0.10]
+				print('*******************************************')
+				print("TARGET=",target)
+				local_in.remove(target)
+				print('inputs=',local_in)
+				dftemp=df[inputs].dropna()
+				X=dftemp[local_in].values
+				y=dftemp[target].values		
 
-
-			dftemp=df[inputs].dropna()
-			X=dftemp[local_in].values
-			y=dftemp[target].values
+			else:
+				local_in=inputs[:]
+				print('*******************************************')
+				print("TARGET=",target)
+				local_in.remove(target)
+				print('inputs=',local_in)
+				dftemp=df[inputs].dropna()
+				X=dftemp[local_in].values
+				y=dftemp[target].values
 			#Xstd = StandardScaler().fit_transform(X)
 
 			X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=0.3, random_state=0)
 
 			#reg=make_pipeline(StandardScaler(), xgb.XGBRegressor(n_estimators=100,max_depth=3))
-			reg=xgb.XGBRegressor(n_estimators=100,max_depth=3)
+			reg=xgb.XGBRegressor(n_estimators=100,max_depth=3,importance_type='weight')
 
 			reg.fit(X_train, y_train)
 			
@@ -257,6 +276,8 @@ class Drift(BaseEstimator):
 		#check_is_fitted(self)
 		#X = self._check_test_inputs(X)
 		index=0
+
+		df = df.copy()
 		
 		for i in self.dictmodel:
 			index+=1
@@ -265,6 +286,7 @@ class Drift(BaseEstimator):
 			if i == "tsquared":
 				break
 			local_in=self.inputs[:]
+			print(local_in)
 			local_in.remove(i)
 			
 			Model=self.dictmodel[i]['model']
@@ -280,17 +302,35 @@ class Drift(BaseEstimator):
 		
 		return df
 
-	def diagnostic(self,df,T2_threshold):
-	
-		dfout = self.score_samples(df)
+	def diagnostic(self,in_df,t2_threshold=100):  
+		"""
+		Apply score_samples to a well-defined time entity (test, batch...) represented by the pandas dataframe in_df,
+		and interpret results on the whole time entity.
+		Interpretation starts with the mean of the T2 on the time entity.
+		If the mean of T2 is over t2_threshold, diagnostic is triggered and backward analysis is done, 
+		first on the zscore of the residus, then on the features importance. 
+
+		Parameters
+		----------
+		in_df: pandas dataframe, shape (n_samples, n_features)
+		t2_threshold : int (default=100)
+			triggers diagnostic
+
+		Returns
+		-------
+		NULL (a report is printed)
+
+		"""
+		dfout = self.score_samples(in_df)
 		T2mean=dfout['T2'].mean()
 		
 		dicresidus={}
 			
 		#Compare T2 MEAN to HISTORICAL HIGHEST??? T2 on Training data??
 		
-		if T2mean > T2_threshold:
+		if T2mean > t2_threshold:
 			# Look at the residus
+			print(T2mean,"> t2_threshold (=",t2_threshold,")")
 			for i in self.dictmodel.keys():
 			#for i in [col for col in dfout.columns if 'residu' in col]:
 				#rechercher les std et calculer combien de fois le z-score pour chaque, on a ensuite un ordre d'importance entre les résidus
@@ -300,7 +340,10 @@ class Drift(BaseEstimator):
 
 				dicresidus[i+"_residu"]=abs(dfout[i+"_residu"].mean()/self.dictmodel[i]['std_residu'])
 				print('z-score residu',i,"_residu ",str(dicresidus[i+"_residu"]))
-				
+
+
+			print("***** FIRST METHOD *****")
+
 			sorted_dicresidus={k: dicresidus[k] for k in sorted(dicresidus, key=dicresidus.get,reverse=True)}
 			print(sorted_dicresidus)
 			
@@ -311,22 +354,67 @@ class Drift(BaseEstimator):
 					print("or direct relatives:")
 					print({k:v for (k,v) in self.dictmodel[j[:-7]]['featimportance'].items() if v > 0.10})
 					
-					
+
+			print("***** SECOND METHOD *****")
+
 			#Idée pour amélioration du système d'information
 			# dans le cas où plusieurs capteurs auraient un z-score résidu élevé (>3)
-			#-> standardiser par rapport à la valeur la plus haute			
-			# et appliquer ce facteur à l'importance des features
-			#-> supprimer les doublons, retrier et proposer la vérification de ces paramètres dans cet ordre
-			#Ex: FNM et WFE ont des zscore résidus très élevé - 10 et 8 à cause d'un capteur N1 à zéro
-			# 10 -> 1 et 8 -> 8/10=0,8
-			# attribuer ces valeurs à ces paramètres FNM=1, WFE=0,8
-			#multiplier les features relatives par ces coefficients
-			#N1 sera dans les deux pools de features avec une importance différentes ex: 0,3 et 0,2
-			#doublon N1=1x0,3 et N1=0,8x0,2   -> on supprime la valeur la plus faible.
-			#dans l'ordre de vérification, on aurait FNM, WFE, N1, ...
-							
+			#-> filtrer sur ces capteurs
+			#-> standardiser par rapport à la valeur la plus haute -> facteur par capteur	
+
+			
+			filt_sorted_dicresidus = {k:v for k,v in sorted_dicresidus.items() if v > 3}
+			if filt_sorted_dicresidus:
+				max_value = max(filt_sorted_dicresidus.values())
+				if max_value > 0:
+					for k in filt_sorted_dicresidus:
+						filt_sorted_dicresidus[k] = filt_sorted_dicresidus[k]/max_value
+
+				# et appliquer (multiplier) ce facteur à l'importance des features du capteur correspondant
+
+				# z={}
+				# for j in [x,y]:
+				# 	print(j)
+				# 	for (k,v) in j.items():
+				# 		if k in z:
+				# 			if z[k] < j[k]:
+				# 				z[k]=v
+				# 		else:
+				# 			z[k]=v
+
+				finaldict={}
+				for j,jval in filt_sorted_dicresidus.items():
+					finaldict[j[:-7]]=filt_sorted_dicresidus[j]
+					for (k,v) in self.dictmodel[j[:-7]]['featimportance'].items():
+						if v > 0.10:
+							if k in finaldict:
+								if finaldict[k] < v*jval:
+									finaldict[k]=v*jval
+							else:
+								finaldict[k]=v*jval
+
+				#-> supprimer les doublons, retrier et proposer la vérification de ces paramètres dans cet ordre
+				#Ex: FNM et WFE ont des zscore résidus très élevé - 10 et 8 à cause d'un capteur N1 à zéro
+				# 10 -> 1 et 8 -> 8/10=0,8
+				# attribuer ces valeurs à ces paramètres FNM=1, WFE=0,8
+				#multiplier les features relatives par ces coefficients
+				#N1 sera dans les deux pools de features avec une importance différentes ex: 0,3 et 0,2
+				#doublon N1=1x0,3 et N1=0,8x0,2   -> on supprime la valeur la plus faible.
+				#dans l'ordre de vérification, on aurait FNM, WFE, N1, ...
+
+				sorted_finaldict={k: finaldict[k] for k in sorted(finaldict, key=finaldict.get,reverse=True)}
+				print(sorted_finaldict)
+				
+				print("Please check these sensors in this order")
+				for j in sorted_finaldict.keys():
+						print(j)
+			else:
+				print("Can't find zscore with value >3")			
 		else:
-			print(str(T2mean)," is below threshold ",str(T2_threshold))
+			print(str(T2mean)," is below threshold ",str(t2_threshold))
+
+
+
 		return 0
 	
 
