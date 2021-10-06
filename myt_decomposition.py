@@ -1,10 +1,11 @@
 from hotelling_t2 import HotellingT2
 
-from scipy import stats
-
 from sklearn.utils.validation import check_is_fitted
 
-class MytDecomposition():
+import numpy as np
+from scipy import stats
+
+class MYTDecomposition():
 	"""MYT Decomposition of the Hotelling's T-squared statistic.
 
 	The purpose of the MYT Decomposition of the Hotelling's T-squared statistic
@@ -61,16 +62,56 @@ class MytDecomposition():
 
 	Examples
 	--------
-	TODO
-	CMD + F: TODO (there is a TODO in the conditional_t2_terms method and the
-	documentation of this method)
-
-
+	>>> import numpy as np
+	>>> from hotelling_t2 import HotellingT2
+	>>> from myt_decomposition import MYTDecomposition
+	>>> X = np.array([[10. , 10.7],
+    ...               [10.4,  9.8],
+    ...               [ 9.7, 10. ],
+    ...               [ 9.7, 10.1],
+    ...               [11.7, 11.5],
+    ...               [11. , 10.8],
+    ...               [ 8.7,  8.8],
+    ...               [ 9.5,  9.3],
+    ...               [10.1,  9.4],
+    ...               [ 9.6,  9.6],
+    ...               [10.5, 10.4],
+    ...               [ 9.2,  9. ],
+    ...               [11.3, 11.6],
+    ...               [10.1,  9.8],
+    ...               [ 8.5,  9.2]])
+    >>> X_test = np.array([[12.3, 12.5],
+    ...                    [ 7. ,  7.3],
+    ...                    [11. ,  9. ],
+    ...                    [ 7.3,  9.1]])
+	>>> clf = HotellingT2().fit(X)
+	>>> clf.mean_
+	array([10., 10.])
+	>>> clf.cov_
+	array([[0.79857143, 0.67928571],
+           [0.67928571, 0.73428571]])
+    >>> clf.score_samples(X_test)
+    array([ 8.51262745, 11.41034614, 23.14059036, 21.59620748])
+    >>> myt_dec = MYTDecomposition(clf)
+    >>> myt_dec.unconditional_t2_terms(X_test)
+    array([[ 6.62432916,  8.51167315],
+           [11.27012522,  9.92801556],
+           [ 1.25223614,  1.3618677 ],
+           [ 9.12880143,  1.10311284]])
+    >>> myt_dec.ucl_unconditional_terms()
+    4.906783932447382
+    >>> myt_dec.conditional_t2_terms(X_test)
+    array([[9.54296667e-04, 1.88829829e+00],
+           [1.48233057e+00, 1.40220913e-01],
+           [2.17787227e+01, 2.18883542e+01],
+           [2.04930946e+01, 1.24674060e+01]])
+    >>> myt_dec.ucl_conditional_terms()
+    5.361288061175456
 	"""
 
 	def __init__(self, hotelling_t2):
 		"""
-		Construct a MytDecomposition object.
+		Construct a MYTDecomposition object.
 
 		Parameters
 		----------
@@ -141,11 +182,8 @@ class MytDecomposition():
 
 	def conditional_t2_terms(self, X):
 		"""
-		Compute conditional T-squared terms.
-
-		TODO: change name of this method to correspond to say something like:
-		"the p conditional T-squared terms which condition each feature on the
-		remaining p-1 features"
+		Compute the p conditional T-squared terms which condition each feature
+		on the remaining p-1 features, where p is the number of features.
 
 		For each sample s in `X`, compute the following conditional T-squared
 		terms:
@@ -163,7 +201,8 @@ class MytDecomposition():
 		Returns
 		-------
 		conditional_t2_terms : array-like, shape (n_samples, n_features)
-			Conditional T-squared terms.
+			Conditional T-squared terms which condition each feature on the
+			remaining `self.n_features_`-1 features.
 
 		ValueError
 			If the number of features of `X` is not equal to the number of
@@ -174,9 +213,6 @@ class MytDecomposition():
 		check_is_fitted(self.hotelling_t2)
 
 		X = self.hotelling_t2._check_test_inputs(X)
-
-		# TODO: add variable checking (see the compute_p_conditional_t2_terms
-		# function in the Jupyter notebook).
 		
 		n_samples, n_features = X.shape
 		
@@ -196,3 +232,30 @@ class MytDecomposition():
 				np.delete(X_centered, j, axis=1) @ b_j
 		
 		return (X - x_bar.T) ** 2 / s_squared
+
+	def ucl_conditional_terms(self):
+		"""
+		Compute the upper control limit (UCL) of the p conditional T-squared
+		terms which condition each feature on the remaining p-1 features, where
+		p is the number of features.
+
+		The significance level used is `self.hotelling_t2.alpha`.
+
+		Returns
+		-------
+		ucl_unconditional_t2_terms : float
+			Returns the upper control limit (UCL) of the conditional T-squared
+			terms which condition each feature on the remaining
+			`self.n_features_`-1 features.
+		"""
+
+		check_is_fitted(self.hotelling_t2)
+
+		n_samples = self.hotelling_t2.n_samples_
+		n_cond_vars = self.hotelling_t2.n_features_ - 1 # Number of conditioned
+		# variables.
+		critical_val = stats.f.ppf(q=1-self.hotelling_t2.alpha, dfn=1,
+			dfd=n_samples-n_cond_vars-1)
+
+		return (((n_samples + 1) * (n_samples - 1)) / \
+			(n_samples * (n_samples - n_cond_vars - 1))) * critical_val
