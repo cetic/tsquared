@@ -126,12 +126,14 @@ class Drift(BaseEstimator):
 	6.051834565565274
 	"""
 
-	def __init__(self): #, alpha=0.05
+	def __init__(self,xgb_n_estimators=100,xgb_max_depth=3): #, alpha=0.05
 		#self.alpha = alpha
 
 		self.default_ucl = 'indep'
 		self.inputs=[]
 		self.dictmodel={}
+		self.xgb_n_estimators=xgb_n_estimators
+		self.xgb_max_depth=xgb_max_depth
 
 	def fit(self, df,targets,inputs,feature_selection=True,feature_to_keep=[], y=None):
 		"""
@@ -165,8 +167,9 @@ class Drift(BaseEstimator):
 		dfresidus=pandas.DataFrame()
 
 		if feature_selection==True:
-			print('Calculation of Correlation matrix based on Spearman method for feature selection')
-			dfcorr=df[inputs].corr(method='spearman')
+			print('Calculation of Correlation matrix for feature selection')
+			dfcorr=df[inputs].corr()#(method='spearman')
+			self.check_list_in_list(inputs,feature_to_keep)
 
 		index=0
 		for target in targets: #['PF309A[bar r]']: #
@@ -177,7 +180,9 @@ class Drift(BaseEstimator):
 			if feature_selection==True:
 				
 				local_corrdic=dfcorr[target].to_frame().to_dict('dict')
-				local_in=[k for (k,v) in local_corrdic[target].items() if abs(v) > 0.10]
+				local_in=[k for (k,v) in local_corrdic[target].items() if abs(v) > 0.10]+feature_to_keep
+				local_in = list(dict.fromkeys(local_in)) #remove potential duplicates following concat feature_to_keep
+				self.dictmodel[target]['corrfilt']=local_in
 				print('*******************************************')
 				print("TARGET=",target)
 				local_in.remove(target)
@@ -187,6 +192,7 @@ class Drift(BaseEstimator):
 				y=dftemp[target].values		
 
 			else:
+				self.dictmodel[target]['corrfilt']=False
 				local_in=inputs[:]
 				print('*******************************************')
 				print("TARGET=",target)
@@ -197,10 +203,10 @@ class Drift(BaseEstimator):
 				y=dftemp[target].values
 			#Xstd = StandardScaler().fit_transform(X)
 
-			X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=0.3, random_state=0)
+			X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=0.2, random_state=0,shuffle=False)
 
 			#reg=make_pipeline(StandardScaler(), xgb.XGBRegressor(n_estimators=100,max_depth=3))
-			reg=xgb.XGBRegressor(n_estimators=100,max_depth=3,importance_type='weight')
+			reg=xgb.XGBRegressor(n_estimators=self.xgb_n_estimators,max_depth=self.xgb_max_depth,learning_rate=0.15,importance_type='weight')
 
 			reg.fit(X_train, y_train)
 			
@@ -241,7 +247,7 @@ class Drift(BaseEstimator):
 		print(dfresidus.head())	
 		monit= HotellingT2()
 		self.dictmodel["tsquared"]={}  # init imbricated dictionary	
-		monit.cleanfit(dfresidus.values,iter=2)
+		monit.cleanfit(dfresidus.values,iter=1)
 		self.dictmodel["tsquared"]['model']=monit
 		#t2_scores = monit.score_samples(dfresidus.values)
 		#define threshold  ->  np.percentile(dfout['T2'].rolling(3000).mean().dropna(), 97)
@@ -281,14 +287,18 @@ class Drift(BaseEstimator):
 		
 		for i in self.dictmodel:
 			index+=1
-			print(i)
-			print(self.dictmodel[i])
+			#print(i)
+			#print(self.dictmodel[i])
 			if i == "tsquared":
 				break
-			local_in=self.inputs[:]
-			print(local_in)
-			local_in.remove(i)
-			
+			if self.dictmodel[i]['corrfilt']==False:
+				local_in=self.inputs[:]
+				#print(local_in)
+				local_in.remove(i)
+				#print("***DEBUG2****",local_in)
+			else:
+				local_in=self.dictmodel[i]['corrfilt']
+				#print("***DEBUG****",local_in)
 			Model=self.dictmodel[i]['model']
 			
 			df[i+'_pred'] = Model.predict(df[local_in].values)
@@ -297,7 +307,7 @@ class Drift(BaseEstimator):
 		cols = [col for col in df.columns if 'residu' in col]		
 		
 		TSquared = self.dictmodel["tsquared"]['model']	
-		print(df[cols].head())
+		#print(df[cols].head())
 		df["T2"] = TSquared.score_samples(df[cols].values)
 		
 		return df
@@ -417,8 +427,19 @@ class Drift(BaseEstimator):
 
 		return 0
 	
-
+	def check_list_in_list(self,list1,list2):
+		'''    
+		check if list1 contains all elements in list2
+		'''
+		result =  all(elem in list1  for elem in list2)
+		if result == False:
+  			raise Exception("Error,",list1,"does not contains all elements in ",list2)
 		
+		return result	
+
+
+
+
 	################# Rest From hotellingT2 #############"	
 	def predict(self, X):
 		"""
