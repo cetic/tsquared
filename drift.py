@@ -135,7 +135,7 @@ class Drift(BaseEstimator):
 		self.xgb_n_estimators=xgb_n_estimators
 		self.xgb_max_depth=xgb_max_depth
 
-	def fit(self, df,targets,inputs,feature_selection=True,feature_to_keep=[], y=None):
+	def fit(self, df,targets,inputs,feature_selection=True,feature_to_keep=[], y=None, model=None):
 		"""
 		Fit Drift. 
 
@@ -151,6 +151,8 @@ class Drift(BaseEstimator):
 			if feature_selection active, avoids the filtration of customed features
 		y : None
 			Not used, present for scikit-learn's API consistency by convention.
+		model: Drift (default=None)
+			A Drift model to be used before training.
 
 		Returns
 		-------
@@ -174,7 +176,10 @@ class Drift(BaseEstimator):
 		index=0
 		for target in targets: #['PF309A[bar r]']: #
 			index+=1
-			self.dictmodel[target]={}  # init imbricated dictionary			
+			if model:
+				self.dictmodel[target] = model.dictmodel[target]
+			else:
+				self.dictmodel[target]={}  # init imbricated dictionary			
 			
 			
 			if feature_selection==True:
@@ -202,7 +207,10 @@ class Drift(BaseEstimator):
 			#reg=make_pipeline(StandardScaler(), xgb.XGBRegressor(n_estimators=100,max_depth=3))
 			reg=xgb.XGBRegressor(n_estimators=self.xgb_n_estimators,max_depth=self.xgb_max_depth,learning_rate=0.15,importance_type='weight')
 
-			reg.fit(X_train, y_train)
+			xgb_model = None
+			if model and target in model.dictmodel:
+				xgb_model = model.dictmodel[target]['model']
+			reg.fit(X_train, y_train, xgb_model=xgb_model)
 			
 			self.dictmodel[target]['model']=reg
 			
@@ -219,7 +227,7 @@ class Drift(BaseEstimator):
        
 			lst=list(local_in)
 			for i in range(0,len(lst)):
-					featimportance[lst[i]]=reg.feature_importances_[i]
+				featimportance[lst[i]]=reg.feature_importances_[i]
 			
 			self.dictmodel[target]['featimportance']={k: featimportance[k] for k in sorted(featimportance, key=featimportance.get,reverse=True)}
 
