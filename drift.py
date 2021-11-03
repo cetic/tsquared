@@ -301,14 +301,14 @@ class Drift(BaseEstimator):
 				#print("***DEBUG****",local_in)
 			Model=self.dictmodel[i]['model']
 			
-			df[i+'_pred'] = Model.predict(df[local_in].values)
-			df[i+'_residu'] =df[i] - df[i+'_pred'] 
+			df.loc[:,i+'_pred'] = Model.predict(df[local_in].values)
+			df.loc[:,i+'_residu'] =df[i] - df[i+'_pred'] 
 		
 		cols = [col for col in df.columns if 'residu' in col]		
 		
 		TSquared = self.dictmodel["tsquared"]['model']	
 		#print(df[cols].head())
-		df["T2"] = TSquared.score_samples(df[cols].values)
+		df.loc[:,"T2"] = TSquared.score_samples(df[cols].values)
 		
 		return df
 
