@@ -182,25 +182,19 @@ class Drift(BaseEstimator):
 				local_corrdic=dfcorr[target].to_frame().to_dict('dict')
 				local_in=[k for (k,v) in local_corrdic[target].items() if abs(v) > 0.10]+feature_to_keep
 				local_in = list(dict.fromkeys(local_in)) #remove potential duplicates following concat feature_to_keep
-				self.dictmodel[target]['corrfilt']=local_in
-				print('*******************************************')
-				print("TARGET=",target)
-				local_in.remove(target)
-				print('inputs=',local_in)
-				dftemp=df[inputs].dropna()
-				X=dftemp[local_in].values
-				y=dftemp[target].values		
+				self.dictmodel[target]['corrfilt']=local_in	
 
 			else:
 				self.dictmodel[target]['corrfilt']=False
 				local_in=inputs[:]
-				print('*******************************************')
-				print("TARGET=",target)
-				local_in.remove(target)
-				print('inputs=',local_in)
-				dftemp=df[inputs].dropna()
-				X=dftemp[local_in].values
-				y=dftemp[target].values
+
+			print('*******************************************')
+			print("TARGET=",target)
+			local_in.remove(target)
+			print('inputs=',local_in)
+			dftemp=df[inputs].dropna()
+			X=dftemp[local_in].values
+			y=dftemp[target].values
 			#Xstd = StandardScaler().fit_transform(X)
 
 			X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=0.2, random_state=0,shuffle=False)
