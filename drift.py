@@ -176,10 +176,7 @@ class Drift(BaseEstimator):
 		index=0
 		for target in targets: #['PF309A[bar r]']: #
 			index+=1
-			if model:
-				self.dictmodel[target] = model.dictmodel[target]
-			else:
-				self.dictmodel[target]={}  # init imbricated dictionary			
+			self.dictmodel[target]={}  # init imbricated dictionary			
 			
 			
 			if feature_selection==True:
