@@ -205,7 +205,7 @@ class Drift(BaseEstimator):
 			reg=xgb.XGBRegressor(n_estimators=self.xgb_n_estimators,max_depth=self.xgb_max_depth,learning_rate=0.15,importance_type='weight')
 
 			xgb_model = None
-			if model and target in model.dictmodel:
+			if model and target in model.dictmodel and 'model' in model.dictmodel[target]:
 				xgb_model = model.dictmodel[target]['model']
 			reg.fit(X_train, y_train, xgb_model=xgb_model)
 			
