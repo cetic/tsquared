@@ -216,9 +216,7 @@ class Drift(BaseEstimator):
 			predictions=reg.predict(X_train)
 			predictscore=reg.score(X_train, y_train)
 			print(predictscore)
-			dfresidus[target+'_residu']=y_train-predictions
-			###### Stocker les std des résidus ######
-			self.dictmodel[target]['std_residu']=dfresidus[target+'_residu'].std()
+			
 			#####################################################
 			
 			###### Stocker Features_Importances par ordre ######   
@@ -240,6 +238,10 @@ class Drift(BaseEstimator):
 			predictions=reg.predict(X_test)
 			predictscore=reg.score(X_test, y_test)
 			print(predictscore)
+			dfresidus[target+'_residu']=y_test-predictions
+			###### Stocker les std des résidus ######
+			self.dictmodel[target]['std_residu']=dfresidus[target+'_residu'].std()
+
 
 			plt.scatter(x=y_test,y=predictions)
 			plt.show()
