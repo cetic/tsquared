@@ -11,6 +11,7 @@ import numpy as np
 from scipy import stats
 from scipy.stats import lognorm
 import math
+import copy
 from scipy import stats
 from hotelling_t2 import HotellingT2
 import pandas
@@ -165,10 +166,11 @@ class Drift(BaseEstimator):
 			If the number of samples of `X`, n_samples, is less than or equal
 			to the number of features of `X`, n_features.
 		"""
+		model = copy.deepcopy(model)
 		self.inputs=inputs
 		dfresidus=pandas.DataFrame()
 
-		if feature_selection==True:
+		if model is None and feature_selection==True:
 			print('Calculation of Correlation matrix for feature selection')
 			dfcorr=df[inputs].corr()#(method='spearman')
 			self.check_list_in_list(inputs,feature_to_keep)
@@ -179,7 +181,7 @@ class Drift(BaseEstimator):
 			self.dictmodel[target]={}  # init imbricated dictionary			
 			
 			
-			if feature_selection==True:
+			if model is None and feature_selection==True:
 				
 				local_corrdic=dfcorr[target].to_frame().to_dict('dict')
 				local_in=[k for (k,v) in local_corrdic[target].items() if abs(v) > 0.10]+feature_to_keep
