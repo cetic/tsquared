@@ -355,10 +355,10 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		return X[t2_scores <= self.ucl(X)]
 		
-	def cleanfit(self, X,res=1,iter=-1):
+	def cleanfit(self, X, res=1, iter=-1):
 		"""
-		
-		Recursively remove outliers until conditions are encountered (including Henze-Zirkler test), and fit
+		Recursively remove outliers until conditions are encountered (including
+		Henze-Zirkler test), and fit.
 		->Merge the several methods in one code
 				- minimum number of outliers detected for stopping iterations
 				- number of iterations decided by the user
@@ -369,26 +369,33 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Training set of samples, where n_samples is the number of samples and
-			n_features is the number of features.
+			Training set of samples, where n_samples is the number of samples
+			and n_features is the number of features.
+
 		n : stop criteria  - minimum number of outliers (default=5)  
+
+		TODO: add res, iter parameters.
 
 		Returns
 		-------
 		self : object
 			Returns the instance itself.
+
 		X_filtered : array-like, shape (n_samples_filtered, n_features)
 			Returns inliers.
+
 		n_iterations: number of iterations of cleaning
+
+		TODO: add Xclean2, _iter, hz values.
 
 		Raises
 		------
 		ValueError
-			If the number of features of `X` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			If the number of samples of `X`, n_samples, is less than or equal
+			to the number of features of `X`, n_features.
 		"""
 		
-		#####INIT###self.fit(X)#######
+		# Initialization.
 		X = self._check_train_inputs(X)
 		self.n_samples_, self.n_features_ = X.shape
 		self.ucl_indep_ = self._ucl_indep(self.n_samples_, self.n_features_,
@@ -398,63 +405,58 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		self.X_fit_ = X		
 		self.cov_ = np.cov(X.T, ddof=1)
 		
-		
-		#cleanfit specific initialisation
+		# Cleanfit specific initialization.
 			
-		_res=self.n_samples_/2  #variable - init to the maximum allowed points to be removed
-		TOTP=self.n_samples_    #CONST - Initial number of points
-		Xclean2=X          #Init second cleaned X for boostraping the iteration
-		_iter=0
-		hzprev=100		   #Empiricaly fixed based on observations on Pyod dataset - hypothesis of normality rejected if too large (generally >300)
-		_continue=1
-		print("****",iter,"****")
+		_res = self.n_samples_ / 2 # Variable - Initialize to the maximum		
+		# allowed points to be removed.
+		TOTP = self.n_samples_ # Constant - Initial number of points.
+		Xclean2 = X # Initialize second cleaned X for bootstrapping the
+		# iteration.
+		_iter = 0
+		hzprev = 100 # Empirically fixed based on observations on PyOD dataset -
+		# hypothesis of normality rejected if too large (generally >300).
+		_continue = 1
 		if(iter < 0):
-			print("****",iter,"****")
-			hz,pval,flag=pg.multivariate_normality(Xclean2)
-			if(hz<hzprev):
-				_continue=1
-				hzprev=hz
+			hz, pval, flag = pg.multivariate_normality(Xclean2)
+			if(hz < hzprev):
+				_continue = 1
+				hzprev = hz
 			else:
-				_continue=0
-			print("hz",_iter,hz)
-			print("det",_iter,np.linalg.det(self.cov_))
+				_continue = 0
 		else:
-			hz=1
-			det=1
+			hz = 1
+			det = 1
 		self.set_default_ucl('not indep')
 		
-		#recursivity
-		while ((_res>res) and (_iter!=iter) and (Xclean2.shape[0] > TOTP/2) and _continue==1):
-			Xclean=Xclean2
+		# Recursivity.
+		while (_res > res) and (_iter != iter) and (Xclean2.shape[0] > TOTP/2) \
+			and _continue == 1:
+
+			Xclean = Xclean2
 			
 			self.fit(Xclean)
-			Xclean2=self.transform(Xclean)
-			if(iter > -1):   # If iter is given, it discards criteria on HZ coef
-				_continue=1
+			Xclean2 = self.transform(Xclean)
+			if(iter > -1): # If iter is given, it discards criteria on HZ
+			# coefficient.
+				_continue = 1
 			else:
-				hz,pval,flag=pg.multivariate_normality(Xclean2)
+				hz, pval, flag = pg.multivariate_normality(Xclean2)
 				
-				if(hz<hzprev):
-					_continue=1
-					hzprev=hz
+				if(hz < hzprev):
+					_continue = 1
+					hzprev = hz
 				else:
-					_continue=0
+					_continue = 0
 					
-			_res=Xclean.shape[0]-Xclean2.shape[0]
-			_iter+=1
-			
-			print("hz",_iter,hz)
-			print("det",_iter,np.linalg.det(self.cov_))
-			
-   
+			_res = Xclean.shape[0] - Xclean2.shape[0]
+			_iter += 1
+
 		self.set_default_ucl('indep')
 		self.fit(Xclean2)
 
 		t2_scores = self.score_samples(X)
 
-		return self,Xclean2,_iter,hz
-	
-	
+		return self, Xclean2, _iter, hz
 		
 	def set_default_ucl(self, ucl):
 		"""
@@ -747,7 +749,7 @@ if __name__ == '__main__':
 	print(f"True mean vector: {true_mean}")
 	print(f"True covariance matrix:\n{true_cov}")
 
-	print("\n--- Hotelling's T2 fitting on the training set---\n")
+	print("\n--- Hotelling's T-squared fitting on the training set---\n")
 
 	hotelling = HotellingT2()
 	hotelling.fit(train)
@@ -756,12 +758,12 @@ if __name__ == '__main__':
 	print(f"Computed covariance matrix:\n{hotelling.cov_}")
 	print(f"Hotelling's T-squared UCL: {hotelling.ucl(test)}")
 
-	print("\n--- Hotelling's T2 scores on the test set ---\n")
+	print("\n--- Hotelling's T-squared scores on the test set ---\n")
 
 	t2_scores = hotelling.score_samples(test)
 	scaled_t2_scores = hotelling.scaled_score_samples(test)
 
-	print(f"Hotelling's T2 score for each sample:\n{t2_scores}")
+	print(f"Hotelling's T-squared score for each sample:\n{t2_scores}")
 	print(f"Scaled Hotelling's T-squared score for each sample:"
 		f"\n{scaled_t2_scores}")
 
@@ -771,8 +773,6 @@ if __name__ == '__main__':
 	outliers = test[pred == -1]
 
 	print(f"Detected outliers:\n{outliers}")
-
-	#print("\n--- Plot of Hotelling's T2 scores on the test set ---\n")
 
 	fig, ax = plt.subplots(figsize=(14, 8))
 	plt.scatter(range(scaled_t2_scores.size), scaled_t2_scores)
