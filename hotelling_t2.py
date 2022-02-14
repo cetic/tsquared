@@ -297,6 +297,47 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		return scaled_t2_scores
 
+	def score(self, X):
+		"""
+		T-squared score of an entire set of samples. The higher the score, the
+		further `X` is from the training set distribution. If this score is
+		greater than the upper control limit (UCL), then it is likely that `X`
+		does not come from the same distribution as the training set.
+
+		Note that the UCL that should be used in this case is not
+		`self.ucl_indep_` nor `self.ucl_not_indep_`, but rather:
+
+		`self.n_samples` / (`self.n_samples` + 1) * `self.ucl_indep_`.
+
+		Parameters
+		----------
+		X : {array-like, sparse matrix}, shape (n_samples, n_features)
+			Test set of samples, where n_samples is the number of samples and
+			n_features is the number of features.
+
+		Returns
+		-------
+		score_sample : float
+			Returns the T-squared score of `X`.
+
+		Raises
+		------
+		ValueError
+			If the number of features of `X` is not equal to the number of
+			features of the training set, that is `self.n_features_`.
+		"""
+
+		check_is_fitted(self)
+
+		X = self._check_test_inputs(X)
+
+		test_mean = X.mean(axis=0)
+
+		t2_score = (test_mean - self.mean_).T @ np.linalg.inv(self.cov_) @ \
+			(test_mean - self.mean_)
+
+		return t2_score
+
 	def predict(self, X):
 		"""
 		Perform classification on samples in `X`.
@@ -773,6 +814,15 @@ if __name__ == '__main__':
 	outliers = test[pred == -1]
 
 	print(f"Detected outliers:\n{outliers}")
+
+	print("\n--- Hotelling's T-squared score on the test set ---\n")
+
+	t2_score = hotelling.score(test)
+	ucl = n / (n + 1) * hotelling.ucl_indep_
+
+	print(f"Hotelling's T-squared score for the test set: {t2_score}")
+	print(f"Do the training set and the test set come from the same"
+		f" distribution? {t2_score <= ucl}")
 
 	fig, ax = plt.subplots(figsize=(14, 8))
 	plt.scatter(range(scaled_t2_scores.size), scaled_t2_scores)
