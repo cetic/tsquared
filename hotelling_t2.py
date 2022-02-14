@@ -32,7 +32,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	Parameters
 	----------
-	alpha: float, between 0 and 1, optional (default=0.05)
+	alpha : float, between 0 and 1, optional (default=0.05)
 		The significance level for computing the upper control limit.
 
 	Attributes
@@ -47,7 +47,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		Equal to `np.cov(X.T, ddof=1)`.
 
-	ucl_indep_: float
+	ucl_indep_ : float
 		Upper control limit (UCL) when assuming:
 
 		- the parameters of the underlying multivariate normal distribution are
@@ -59,7 +59,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		then x will be reported as an outlier. Otherwise, x will be reported as
 		an inlier.
 
-	ucl_not_indep_: float
+	ucl_not_indep_ : float
 		Upper control limit (UCL) when assuming:
 
 		- the parameters of the underlying multivariate normal distribution are
@@ -77,13 +77,13 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 	n_samples_ : int
 		Number of samples in the training data.
 	
-	X_fit_: {array-like, sparse matrix}, shape (n_samples, n_features)
+	X_fit_ : {array-like, sparse matrix}, shape (n_samples, n_features)
 		A reference to the training set of samples. It is used to infer which
 		UCL should be used.
 
 	Other variables
 	---------------
-	default_ucl: {'auto', 'indep', 'not indep'} (default='indep')
+	default_ucl : {'auto', 'indep', 'not indep'} (default='indep')
 		The upper control limit (UCL) to be used. It affects the methods relying
 		on the UCL (such as predict and transform methods).
 
@@ -425,7 +425,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		X_filtered : array-like, shape (n_samples_filtered, n_features)
 			Returns inliers.
 
-		n_iterations: number of iterations of cleaning
+		n_iterations : number of iterations of cleaning
 
 		TODO: add Xclean2, _iter, hz values.
 
@@ -597,7 +597,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		n_features : int
 			The number of features of the training set.
 
-		alpha: float, between 0 and 1, optional (default=0.05)
+		alpha : float, between 0 and 1, optional (default=0.05)
 			The significance level.
 
 		Returns
@@ -639,7 +639,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		n_features : int
 			The number of features of the training set.
 
-		alpha: float, between 0 and 1, optional (default=0.05)
+		alpha : float, between 0 and 1, optional (default=0.05)
 			The significance level.
 
 		Returns
