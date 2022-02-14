@@ -1,32 +1,29 @@
-from sklearn.base import BaseEstimator
+import numpy as np
+import pingouin as pg
+from scipy import stats
+from sklearn.base import BaseEstimator, OutlierMixin, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-import numpy as np
-from scipy import stats
-from scipy.stats import lognorm
-import math
-from scipy import stats
-import pingouin as pg
 
+class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
+	"""Hotelling's T-squared test.
 
-class HotellingT2(BaseEstimator):
-	"""Hotelling's T2 test.
-
-	Hotelling's T2 test is an unsupervised multivariate outlier
+	Hotelling's T-squared test is an unsupervised multivariate outlier
 	detection.
 
 	When fitting on a (clean) training set, the real distribution, supposed to
-	be a multivariate normal distribution, is estimated with these parameters:
+	be a multivariate normal distribution, is estimated. In order to achieve
+	this, these parameters are estimated:
 
-	- the empirical mean for each variables;
+	- the empirical mean for each feature;
 	- the sample covariance matrix.
 
 	In addition, two upper control limits (UCLs) are computed. One of these is
 	chosen to classify new samples. See the "Attributes" section for an
 	explanation of the difference between these two limits: ucl_indep_ and
-	ucl_not_indep_. Note that the first one is the UCL used by default, 
-	but this behavior can be changed by calling the set_default_ucl method.
+	ucl_not_indep_. Note that the first one is the UCL used by default, but this
+	behavior can be changed by calling the set_default_ucl method.
 
 	When predicting, for each sample x from a test set, a T-squared score is
 	computed and compared to the default upper control limit. If this score
@@ -143,7 +140,7 @@ class HotellingT2(BaseEstimator):
 
 	def fit(self, X, y=None):
 		"""
-		Fit Hotelling's T2. Specifically, compute the mean vector, the
+		Fit Hotelling's T-squared. Specifically, compute the mean vector, the
 		covariance matrix on X and the upper control limits.
 
 		Parameters
@@ -216,10 +213,10 @@ class HotellingT2(BaseEstimator):
 
 		X_centered = X - self.mean_ # Zero-centered data.
 		inverse_cov = np.linalg.pinv(self.cov_) # Inverse covariance matrix.
-		# previously inverse_cov = np.linalg.inv(self.cov_) but failed on singular matrix
-		# explanation    https://stackoverflow.com/questions/49357417/why-is-numpy-linalg-pinv-preferred-over-numpy-linalg-inv-for-creating-invers/49364727
-		
-		
+		# Previously np.linalg.inv was used. However, it failed on singular
+		# matrix. Explanation on this URL:
+		# https://stackoverflow.com/questions/49357417/why-is-numpy-linalg-pinv-preferred-over-numpy-linalg-inv-for-creating-invers/49364727
+
 		t2_scores = np.einsum('ij,ij->i', X_centered @ inverse_cov, X_centered)
 		# Equivalent to:
 		# ```
@@ -326,7 +323,7 @@ class HotellingT2(BaseEstimator):
 
 		t2_scores = self.score_samples(X)
 
-		return np.where(t2_scores > self.ucl(X),  -1, 1)
+		return np.where(t2_scores > self.ucl(X), -1, 1)
 
 	def transform(self, X):
 		"""
