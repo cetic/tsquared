@@ -74,7 +74,7 @@ The difference is the nature of the entities (point >< distribution) that are co
 
 What's the relationship with z-score then?
 
-<a href="figures/equ_zscore.png"><img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_zscore.png"></a>
+<a href="figures/equ_zscore.png"><img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_zscore.png" width="300"></a>
 
 <img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_T2.png">
 
@@ -84,7 +84,7 @@ The covariance matrix of the reference multivariate distribution is formed by co
 
 #### <a name="maha">How TSquared is related to Mahalanobis Distance?</a>
 
-<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_mahalanobis.PNG">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_mahalanobis.PNG" width="450">
 
 #### <a name="mcd">How TSquared is related to MCD?</a>
 
@@ -107,7 +107,7 @@ But this should be done cautiously
 Can we apply T2 on a reduced number of (principal) components?
 Let's try a 2D example. In the following picture, the relation between Var1 and Var2 is mostly linear, these variables are strongly correlated. Let's suppose that the 1st component of the PCA is sufficient to define the relation, component 2 being the noisy part of the relation.
 
-<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/Capture_pca.PNG">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/Capture_pca.PNG" width="500">
 
 In this case, monitoring any futur observation is like applying a z-score (1 dimension) to this observation compared to the distribution of all past observations projected on the first component axis.
 
