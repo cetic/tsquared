@@ -5,7 +5,6 @@ from sklearn.base import BaseEstimator, OutlierMixin, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-
 class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 	"""Hotelling's T-squared test.
 
