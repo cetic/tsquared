@@ -70,13 +70,13 @@ Hotelling's T2 is a generalization of the t-statistic for multivariate hypothesi
 When a single multivariate observation is compared to a reference distribution, it can be viewed as a generalization of the z-score.
 The difference is the nature of the entities (point >< distribution) that are considered in the distance computation and in the denominator of the equation also.
 
-<img src="pictures/z-score.jpg" width="300">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/z-score.jpg" width="300">
 
 What's the relationship with z-score then?
 
-<a href="pictures/equ_zscore.png"><img src="pictures/equ_zscore.png" width="300"></a>
+<a href="figures/equ_zscore.png"><img src="figures/equ_zscore.png" width="300"></a>
 
-<img src="pictures/equ_T2.png" width="450">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_T2.png" width="450">
 
 X is in this case the observation (point) in the multivariate space.
 
@@ -84,7 +84,7 @@ The covariance matrix of the reference multivariate distribution is formed by co
 
 #### <a name="maha">How TSquared is related to Mahalanobis Distance?</a>
 
-<img src="pictures/equ_mahalanobis.PNG" width="300">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_mahalanobis.PNG" width="300">
 
 #### <a name="mcd">How TSquared is related to MCD?</a>
 
@@ -107,7 +107,7 @@ But this should be done cautiously
 Can we apply T2 on a reduced number of (principal) components?
 Let's try a 2D example. In the following picture, the relation between Var1 and Var2 is mostly linear, these variables are strongly correlated. Let's suppose that the 1st component of the PCA is sufficient to define the relation, component 2 being the noisy part of the relation.
 
-<img src="pictures/Capture_pca.PNG" width="500">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/Capture_pca.PNG" width="500">
 
 In this case, monitoring any futur observation is like applying a z-score (1 dimension) to this observation compared to the distribution of all past observations projected on the first component axis.
 
@@ -130,7 +130,7 @@ The TSquared procedure can be applied 1 or 2 times to the training set and outli
 
 The risk to work with a training set not clean is to have an univariate outlier which is an inlier in multivariate, the multivariate UCL being too large (Observation n°78).
 
-<img src="pictures/Image_inlier.png" width="300">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/Image_inlier.png" width="300">
 
 #### <a name="MYT"> What variables cause the outlier? What is MYT decomposition?
 
@@ -163,10 +163,10 @@ The experiment was done using TSquared autocleaning function and boxcox transfor
  	[Multivariate Control Charts for Individual Observations]: ../Références/Multivariate%20control%20charts%20for%20individual%20observations.pdf
 
 <!---
-![](pictures/z-score.jpg)
-![](pictures/equ_zscore.png)
-![](pictures/equ_T2.png)
+![](figures/z-score.jpg)
+![](figures/equ_zscore.png)
+![](figures/equ_T2.png)
 --->
 <!---
-<a href="https://github.com/cetic/TSquared/tree/master/pictures/z-score.jpg"><img class="fig" src="https://github.com/cetic/TSquared/tree/master/pictures/z-score.jpg" style="width:100%; height:auto;"/></a>
+<a href="https://github.com/cetic/TSquared/tree/master/figures/z-score.jpg"><img class="fig" src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/z-score.jpg" style="width:100%; height:auto;"/></a>
 --->
