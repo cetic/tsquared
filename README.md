@@ -84,7 +84,7 @@ The covariance matrix of the reference multivariate distribution is formed by co
 
 #### <a name="maha">How TSquared is related to Mahalanobis Distance?</a>
 
-<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_mahalanobis.PNG" width="450">
+<img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_mahalanobis.PNG" width="550">
 
 #### <a name="mcd">How TSquared is related to MCD?</a>
 
