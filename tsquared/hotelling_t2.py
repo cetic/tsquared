@@ -114,7 +114,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 	Examples
 	--------
 	>>> import numpy as np
-	>>> from TSquared.hotelling_t2 import HotellingT2
+	>>> from tsquared import HotellingT2
 	>>> true_mean = np.array([0, 0])
 	>>> true_cov = np.array([[.8, .3],
 	...                      [.3, .4]])

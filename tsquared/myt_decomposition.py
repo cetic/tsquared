@@ -4,7 +4,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from tsquared.hotelling_t2 import HotellingT2
 
-class MYTDecomposition():
+class MYTDecomposition:
 	"""MYT Decomposition of the Hotelling's T-squared statistic.
 
 	The purpose of the MYT Decomposition of the Hotelling's T-squared statistic
@@ -62,8 +62,8 @@ class MYTDecomposition():
 	Examples
 	--------
 	>>> import numpy as np
-	>>> from hotelling_t2 import HotellingT2
-	>>> from myt_decomposition import MYTDecomposition
+	>>> from tsquared import HotellingT2
+	>>> from tsquared import MYTDecomposition
 	>>> X = np.array([[10. , 10.7],
     ...               [10.4,  9.8],
     ...               [ 9.7, 10. ],
