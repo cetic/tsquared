@@ -74,7 +74,7 @@ The difference is the nature of the entities (point >< distribution) that are co
 
 What's the relationship with z-score then?
 
-<a href="figures/equ_zscore.png"><img src="figures/equ_zscore.png" width="300"></a>
+<a href="figures/equ_zscore.png"><img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_zscore.png" width="300"></a>
 
 <img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_T2.png" width="450">
 
