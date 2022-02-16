@@ -2,7 +2,7 @@ import numpy as np
 from scipy import stats
 from sklearn.utils.validation import check_is_fitted
 
-from tsquared.hotelling_t2 import HotellingT2
+from tsquared import HotellingT2
 
 class MYTDecomposition:
 	"""MYT Decomposition of the Hotelling's T-squared statistic.
@@ -45,8 +45,8 @@ class MYTDecomposition:
 
 	Parameters
 	----------
-	hotelling_t2 : hotelling_t2.HotellingT2
-		A hotelling_t2.HotellingT2 object.
+	hotelling_t2 : tsquared.HotellingT2
+		A tsquared.HotellingT2 object.
 
 	References
 	----------
@@ -114,13 +114,13 @@ class MYTDecomposition:
 
 		Parameters
 		----------
-		hotelling_t2 : hotelling_t2.HotellingT2
-			A hotelling_t2.HotellingT2 object.
+		hotelling_t2 : tsquared.HotellingT2
+			A tsquared.HotellingT2 object.
 		"""
 
 		if not isinstance(hotelling_t2, HotellingT2):
 			raise TypeError("The argument `hotelling_t2` must be a"
-				" hotelling_t2.HotellingT2 object.")
+				" tsquared.HotellingT2 object.")
 
 		self.hotelling_t2 = hotelling_t2
 
