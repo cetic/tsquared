@@ -176,7 +176,7 @@ class MYTDecomposition:
 		n_samples = self.hotelling_t2.n_samples_
 		critical_val = stats.f.ppf(q=1-self.hotelling_t2.alpha, dfn=1,
 			dfd=n_samples-1)
-		
+
 		return (n_samples + 1) / n_samples * critical_val
 
 	def conditional_t2_terms(self, X):
@@ -212,11 +212,11 @@ class MYTDecomposition:
 		check_is_fitted(self.hotelling_t2)
 
 		X = self.hotelling_t2._check_test_inputs(X)
-		
+
 		n_samples, n_features = X.shape
-		
+
 		X_centered = X - self.hotelling_t2.mean_ # Zero-centered data.
-		
+
 		s_squared = np.empty(n_features)
 		x_bar = np.empty((n_features, n_samples))
 		for j in range(n_features):
@@ -229,7 +229,7 @@ class MYTDecomposition:
 			s_squared[j] = self.hotelling_t2.cov_[j, j] - sxx @ b_j
 			x_bar[j] = self.hotelling_t2.mean_[j] + \
 				np.delete(X_centered, j, axis=1) @ b_j
-		
+
 		return (X - x_bar.T) ** 2 / s_squared
 
 	def ucl_conditional_terms(self):

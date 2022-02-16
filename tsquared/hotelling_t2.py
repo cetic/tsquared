@@ -75,7 +75,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	n_samples_ : int
 		Number of samples in the training data.
-	
+
 	X_fit_ : {array-like, sparse matrix}, shape (n_samples, n_features)
 		A reference to the training set of samples. It is used to infer which
 		UCL should be used.
@@ -394,7 +394,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		t2_scores = self.score_samples(X)
 
 		return X[t2_scores <= self.ucl(X)]
-		
+
 	def cleanfit(self, X, res=1, iter=-1):
 		"""
 		Recursively remove outliers until conditions are encountered (including
@@ -405,14 +405,14 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				- max number of iterations based on the data size
 				- smart cleaning based on normality coefficient
 					- door open for other coefs
-		
+
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
 			Training set of samples, where n_samples is the number of samples
 			and n_features is the number of features.
 
-		n : stop criteria  - minimum number of outliers (default=5)  
+		n : stop criteria  - minimum number of outliers (default=5)
 
 		TODO: add res, iter parameters.
 
@@ -434,7 +434,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			If the number of samples of `X`, n_samples, is less than or equal
 			to the number of features of `X`, n_features.
 		"""
-		
+
 		# Initialization.
 		X = self._check_train_inputs(X)
 		self.n_samples_, self.n_features_ = X.shape
@@ -442,12 +442,12 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			alpha=self.alpha)
 		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_,
 			self.n_features_, alpha=self.alpha)
-		self.X_fit_ = X		
+		self.X_fit_ = X
 		self.cov_ = np.cov(X.T, ddof=1)
-		
+
 		# Cleanfit specific initialization.
-			
-		_res = self.n_samples_ / 2 # Variable - Initialize to the maximum		
+
+		_res = self.n_samples_ / 2 # Variable - Initialize to the maximum
 		# allowed points to be removed.
 		TOTP = self.n_samples_ # Constant - Initial number of points.
 		Xclean2 = X # Initialize second cleaned X for bootstrapping the
@@ -467,13 +467,13 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			hz = 1
 			det = 1
 		self.set_default_ucl('not indep')
-		
+
 		# Recursivity.
 		while (_res > res) and (_iter != iter) and (Xclean2.shape[0] > TOTP/2) \
 			and _continue == 1:
 
 			Xclean = Xclean2
-			
+
 			self.fit(Xclean)
 			Xclean2 = self.transform(Xclean)
 			if(iter > -1): # If iter is given, it discards criteria on HZ
@@ -481,13 +481,13 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				_continue = 1
 			else:
 				hz, pval, flag = pg.multivariate_normality(Xclean2)
-				
+
 				if(hz < hzprev):
 					_continue = 1
 					hzprev = hz
 				else:
 					_continue = 0
-					
+
 			_res = Xclean.shape[0] - Xclean2.shape[0]
 			_iter += 1
 
@@ -497,7 +497,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		t2_scores = self.score_samples(X)
 
 		return self, Xclean2, _iter, hz
-		
+
 	def set_default_ucl(self, ucl):
 		"""
 		Set the default upper control limit (UCL) to either 'auto', 'indep' or
@@ -617,7 +617,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		critical_val = stats.f.ppf(q=1-alpha, dfn=n_features,
 			dfd=n_samples-n_features)
-	
+
 		return n_features * (n_samples + 1) * (n_samples - 1) / n_samples / \
 			(n_samples - n_features) * critical_val
 
@@ -659,7 +659,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		critical_val = stats.beta.ppf(q=1-alpha, a=n_features/2,
 			b=(n_samples-n_features-1)/2)
-	
+
 		return (n_samples - 1) ** 2 / n_samples * critical_val
 
 	def _check_inputs(self, X):
@@ -762,8 +762,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				" the number of features of the training set.")
 
 		return X
-			
-	
+
 if __name__ == '__main__':
 	import matplotlib.pyplot as plt
 
