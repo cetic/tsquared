@@ -426,7 +426,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		n_iterations : number of iterations of cleaning
 
-		TODO: add Xclean2, _iter, hz values.
+		TODO: add X_clean, _iter, hz values.
 
 		Raises
 		------
@@ -449,15 +449,15 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		_res = self.n_samples_ / 2 # Variable - Initialize to the maximum
 		# allowed points to be removed.
-		TOTP = self.n_samples_ # Constant - Initial number of points.
-		Xclean2 = X # Initialize second cleaned X for bootstrapping the
+		totp = self.n_samples_ # Constant - Initial number of points.
+		X_clean = X # Initialize second cleaned X for bootstrapping the
 		# iteration.
 		_iter = 0
 		hzprev = 100 # Empirically fixed based on observations on PyOD dataset -
 		# hypothesis of normality rejected if too large (generally >300).
 		_continue = 1
 		if(iter < 0):
-			hz, pval, flag = pg.multivariate_normality(Xclean2)
+			hz, pval, flag = pg.multivariate_normality(X_clean)
 			if(hz < hzprev):
 				_continue = 1
 				hzprev = hz
@@ -469,18 +469,19 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		self.set_default_ucl('not indep')
 
 		# Recursivity.
-		while (_res > res) and (_iter != iter) and (Xclean2.shape[0] > TOTP/2) \
+		while (_res > res) and (_iter != iter) and (X_clean.shape[0] > totp/2) \
 			and _continue == 1:
 
-			Xclean = Xclean2
+			X_clean2 = X_clean
+			# TODO: choose a better variable name for X_clean2.
 
-			self.fit(Xclean)
-			Xclean2 = self.transform(Xclean)
+			self.fit(X_clean2)
+			X_clean = self.transform(X_clean2)
 			if(iter > -1): # If iter is given, it discards criteria on HZ
 			# coefficient.
 				_continue = 1
 			else:
-				hz, pval, flag = pg.multivariate_normality(Xclean2)
+				hz, pval, flag = pg.multivariate_normality(X_clean)
 
 				if(hz < hzprev):
 					_continue = 1
@@ -488,15 +489,15 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				else:
 					_continue = 0
 
-			_res = Xclean.shape[0] - Xclean2.shape[0]
+			_res = X_clean2.shape[0] - X_clean.shape[0]
 			_iter += 1
 
 		self.set_default_ucl('indep')
-		self.fit(Xclean2)
+		self.fit(X_clean)
 
 		t2_scores = self.score_samples(X)
 
-		return self, Xclean2, _iter, hz
+		return self, X_clean, _iter, hz
 
 	def set_default_ucl(self, ucl):
 		"""
