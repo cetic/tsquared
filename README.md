@@ -5,29 +5,46 @@ Python implementation of Hotelling's T-squared (T2) for process monitoring and M
 ## Table of Contents:
 
 1. [Features](#features)
-2. [Specific Implementation](#impl)
-3. [Questions](#quest)
-	- [How TSquared is related to T-Test?](#ttest)
-	- [How TSquared is related to Mahalanobis Distance?](#maha)
-	- [How TSquared is related to MCD?](#mcd)
-	- [Should I use PCA with TSquared?](#pca)
-	- [Can I apply T-Squared to any kind of process? What are the conditions on parameters to use T-Squared?](#conditions)
-	- [Should I clean dataset before training? Is there a procedure to clean the data?](#cleaning)
-	- [What variables cause the outlier? What is MYT decomposition?](#MYT)
-	- [How deviation types impact T-Squared?](#types)
-	- [Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?](#sufficient)
-	- [UCL, what does that mean in multivariate context? How to compute UCL?](#UCL)
+2. [Installation](#installation)
+3. [Specific Implementation](#implementation)
+4. [Questions](#questions)
+	- [How TSquared is related to T-Test?](#questions_ttest)
+	- [How TSquared is related to Mahalanobis Distance?](#questions_mahalanobis_dist)
+	- [How TSquared is related to MCD?](#questions_mcd)
+	- [Should I use PCA with TSquared?](#questions_pca)
+	- [Can I apply TSquared to any kind of process? What are the conditions on parameters to use TSquared?](#questions_conditions)
+	- [Should I clean dataset before training? Is there a procedure to clean the data?](#questions_cleaning)
+	- [What variables cause the outlier? What is MYT decomposition?](#questions_myt)
+	- [How deviation types impact TSquared?](#questions_types)
+	- [Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?](#questions_sufficient)
+	- [UCL, what does that mean in multivariate context? How to compute UCL?](#questions_ucl)
+	- [My data are not normally distributed. Does it help to apply a Box-Cox transformation on each variables?](#questions_boxcox)
+5. [References](#references)
 
-4. [References](#ref) 
-
-## <a name="features">Features</a>
+## <a name="features"></a> Features
 
 1. Classical multivariate T2 chart in which Hotelling's T2 statistic is computed as a distance of a multivariate observation from the multivariate mean scaled by the covariance matrix of the variables
 2. Python scikit-learn -like implementation
 3. Efficient with large datasets
 4. MYT decomposition
 
-## <a name="impl">Specific Implementation</a>
+## <a name="installation"></a> Installation
+
+TSquared requires:
+
+- Python (>= 3.6)
+- NumPy
+- Pingouin
+- scikit-learn
+- SciPy
+
+TSquared can be install from PyPI:
+
+```sh
+pip install tsquared
+```
+
+## <a name="implementation"></a> Specific Implementation
 
 Hotelling's T2 is initially for sampled distribution comparison to a reference distribution,
 known as a generalization of the t-statistic for multivariate hypothesis testing.
@@ -62,9 +79,9 @@ clf.cleanfit(X_train)
 test_scores = clf.score_samples(X_test, alpha=.05)
 ```
 
-## <a name="quest"> Questions</a>
+## <a name="questions"></a> Questions
 
-#### <a name="ttest">How TSquared is related to T-Test?</a>
+### <a name="questions_ttest"></a> How TSquared is related to T-Test?
 
 Hotelling's T2 is a generalization of the t-statistic for multivariate hypothesis testing
 When a single multivariate observation is compared to a reference distribution, it can be viewed as a generalization of the z-score.
@@ -82,11 +99,11 @@ X is in this case the observation (point) in the multivariate space.
 
 The covariance matrix of the reference multivariate distribution is formed by covariance terms between each dimensions and by variance terms (square of standard deviations) on the diagonal.
 
-#### <a name="maha">How TSquared is related to Mahalanobis Distance?</a>
+### <a name="questions_mahalanobis_dist"></a> How TSquared is related to Mahalanobis Distance?
 
 <img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/equ_mahalanobis.PNG" width="550">
 
-#### <a name="mcd">How TSquared is related to MCD?</a>
+### <a name="questions_mcd"></a> How TSquared is related to MCD?
 
 MCD = minimum covariance determinant is an algorithm available in the Outlier Detection framework pyOD
 MCD is based on Mahalanobis Squared Distance (MSD =~ Hotelling's T2)
@@ -94,7 +111,7 @@ Based on the distribution of MSD, the training consists to find the subgroup of 
 
 ⟹ It is equivalent to the cleaning operation in TSquared.
 
-#### <a name="pca">Should I use PCA with TSquared?</a>
+### <a name="questions_pca"></a> Should I use PCA with TSquared?
 
 Yes, you can!
 
@@ -117,12 +134,12 @@ By extension to more dimensions, we understand that reducing "blindly" the numbe
 
 Instead, if PCA is used to reduce the dimensionnality, it is advised to monitor as well the residual group of components in a separated monitoring.
 
-#### <a name="conditions">Can I apply T-Squared to any kind of process? What are the conditions on parameters to use T-Squared?</a>
+### <a name="questions_conditions"></a> Can I apply TSquared to any kind of process? What are the conditions on parameters to use TSquared?
 
 The basic assumption is that all variables should be normally distributed. 
 However, the algorithm is tolerant to some extent if the distributions are not perfectly normal.
 
-#### <a name="cleaning">Should I clean dataset before training? Is there a procedure to clean the data?</a>
+### <a name="questions_cleaning"></a> Should I clean dataset before training? Is there a procedure to clean the data?
 
 Yes, the cleaner the better
 
@@ -132,19 +149,19 @@ The risk to work with a training set not clean is to have an univariate outlier 
 
 <img src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/Image_inlier.png">
 
-#### <a name="MYT"> What variables cause the outlier? What is MYT decomposition?
+### <a name="questions_myt"></a> What variables cause the outlier? What is MYT decomposition?
 
-#### <a name="types"> How deviation types impact TSquared?
+### <a name="questions_types"></a> How deviation types impact TSquared?
 
-#### <a name="sufficient"> Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?
+### <a name="questions_sufficient"></a> Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?
 
-#### <a name="UCL"> UCL, what does that mean in multivariate context? How to compute UCL?
+### <a name="questions_ucl"></a> UCL, what does that mean in multivariate context? How to compute UCL?
 
-#### <a name="boxcox"> My data are not normally distributed. Does it help to apply a boxcox transformation on each variables?
+### <a name="questions_boxcox"></a> My data are not normally distributed. Does it help to apply a Box-Cox transformation on each variables?
 
-The experiment was done using TSquared autocleaning function and boxcox transformation on each variables.
-	
-## <a name="cleaning">References</a>
+The experiment was done using TSquared autocleaning function and Box-Cox transformation on each variables.
+
+## <a name="references"></a> References
 
 - <cite> Decomposition of T2 for Multivariate Control Chart Interpretation, ROBERT L. MASON, NOLA D. TRACY and JOHN C. YOUNG</cite>
 
