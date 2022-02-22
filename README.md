@@ -8,7 +8,7 @@ Python implementation of Hotelling's T-squared (T2) for process monitoring and M
 2. [Installation](#installation)
 3. [Specific Implementation](#implementation)
 4. [Questions](#questions)
-	- [How TSquared is related to T-Test?](#questions_ttest)
+	- [How TSquared is related to t-test?](#questions_ttest)
 	- [How TSquared is related to Mahalanobis Distance?](#questions_mahalanobis_dist)
 	- [How TSquared is related to MCD?](#questions_mcd)
 	- [Should I use PCA with TSquared?](#questions_pca)
@@ -81,7 +81,7 @@ test_scores = clf.score_samples(X_test, alpha=.05)
 
 ## <a name="questions"></a> Questions
 
-### <a name="questions_ttest"></a> How TSquared is related to T-Test?
+### <a name="questions_ttest"></a> How TSquared is related to t-test?
 
 Hotelling's T2 is a generalization of the t-statistic for multivariate hypothesis testing
 When a single multivariate observation is compared to a reference distribution, it can be viewed as a generalization of the z-score.
