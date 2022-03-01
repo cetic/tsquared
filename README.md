@@ -38,7 +38,7 @@ TSquared requires:
 - scikit-learn
 - SciPy
 
-TSquared can be install from PyPI:
+TSquared can be installed from PyPI:
 
 ```sh
 pip install tsquared
