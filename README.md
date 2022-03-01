@@ -2,7 +2,7 @@
 
 Python implementation of Hotelling's T-squared (T2) for process monitoring and MYT decomposition.
 
-## Table of Contents:
+## Table of Contents
 
 1. [Features](#features)
 2. [Installation](#installation)
