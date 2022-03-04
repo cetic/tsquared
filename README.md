@@ -128,7 +128,7 @@ Let's try a 2D example. In the following picture, the relation between Var1 and 
 
 In this case, monitoring any futur observation is like applying a z-score (1 dimension) to this observation compared to the distribution of all past observations projected on the first component axis.
 
-If a loss of correlation happened between Var1 and Var2, it won't be seen on this univariate monitoring because it is the second component that will be impacted. This can happened if the senor capturing Var2 is defectuous. 
+If a loss of correlation happened between Var1 and Var2, it won't be seen on this univariate monitoring because it is the second component that will be impacted. This can happened if the sensor capturing Var2 is defectuous. 
 
 By extension to more dimensions, we understand that reducing "blindly" the number of components before a TSquared monitoring is not advised. It is certainly not a thing to do in case of sensors validation.
 
