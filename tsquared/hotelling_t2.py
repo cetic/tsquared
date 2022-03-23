@@ -31,7 +31,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	Parameters
 	----------
-	alpha : float, between 0 and 1, optional (default=0.05)
+	alpha : float, between 0 and 1, default=0.05
 		The significance level for computing the upper control limit.
 
 	Attributes
@@ -82,7 +82,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	Other variables
 	---------------
-	default_ucl : {'auto', 'indep', 'not indep'} (default='indep')
+	default_ucl : {'auto', 'indep', 'not indep'}, default='indep'
 		The upper control limit (UCL) to be used. It affects the methods relying
 		on the UCL (such as predict and transform methods).
 
@@ -266,7 +266,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			Test set of samples, where n_samples is the number of samples and
 			n_features is the number of features.
 
-		ucl_baseline : float (default=0.05)
+		ucl_baseline : float, default=0.05
 			Baseline value, strictly between 0 and 1, for the upper control
 			limit (UCL).
 
@@ -412,7 +412,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			Training set of samples, where n_samples is the number of samples
 			and n_features is the number of features.
 
-		n : stop criteria  - minimum number of outliers (default=5)
+		n : stop criteria - minimum number of outliers, default=5
 
 		TODO: add res, iter parameters.
 
@@ -597,7 +597,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		n_features : int
 			The number of features of the training set.
 
-		alpha : float, between 0 and 1, optional (default=0.05)
+		alpha : float, between 0 and 1, default=0.05
 			The significance level.
 
 		Returns
@@ -639,7 +639,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		n_features : int
 			The number of features of the training set.
 
-		alpha : float, between 0 and 1, optional (default=0.05)
+		alpha : float, between 0 and 1, default=0.05
 			The significance level.
 
 		Returns
