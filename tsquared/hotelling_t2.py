@@ -70,10 +70,10 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		then x will be reported as an outlier. Otherwise, x will be reported as
 		an inlier.
 
-	n_features_ : int
+	n_features_in_ : int
 		Number of features in the training data.
 
-	n_samples_ : int
+	n_samples_in_ : int
 		Number of samples in the training data.
 
 	X_fit_ : {array-like, sparse matrix}, shape (n_samples, n_features)
@@ -166,17 +166,17 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		X = self._check_train_inputs(X)
 
-		self.n_samples_, self.n_features_ = X.shape
+		self.n_samples_in_, self.n_features_in_ = X.shape
 
 		self.mean_ = X.mean(axis=0)
 		self.cov_ = np.cov(X.T, ddof=1)
-		if self.n_features_ == 1:
+		if self.n_features_in_ == 1:
 			self.cov_ = self.cov_.reshape(1, 1)
 
-		self.ucl_indep_ = self._ucl_indep(self.n_samples_, self.n_features_,
-			alpha=self.alpha)
-		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_,
-			self.n_features_, alpha=self.alpha)
+		self.ucl_indep_ = self._ucl_indep(self.n_samples_in_,
+			self.n_features_in_, alpha=self.alpha)
+		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_in_,
+			self.n_features_in_, alpha=self.alpha)
 
 		self.X_fit_ = X
 
@@ -203,7 +203,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the number of features of `X` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			features of the training set, that is `self.n_features_in_`.
 		"""
 
 		check_is_fitted(self)
@@ -279,7 +279,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the number of features of `X` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			features of the training set, that is `self.n_features_in_`.
 
 		ValueError
 			If the UCL baseline `ucl_baseline` is not strictly between 0 and 1.
@@ -323,7 +323,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the number of features of `X` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			features of the training set, that is `self.n_features_in_`.
 		"""
 
 		check_is_fitted(self)
@@ -358,7 +358,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the number of features of `X` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			features of the training set, that is `self.n_features_in_`.
 		"""
 
 		t2_scores = self.score_samples(X)
@@ -384,7 +384,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the number of features of `X` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			features of the training set, that is `self.n_features_in_`.
 		"""
 
 		check_is_fitted(self)
@@ -437,19 +437,19 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		# Initialization.
 		X = self._check_train_inputs(X)
-		self.n_samples_, self.n_features_ = X.shape
-		self.ucl_indep_ = self._ucl_indep(self.n_samples_, self.n_features_,
-			alpha=self.alpha)
-		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_,
-			self.n_features_, alpha=self.alpha)
+		self.n_samples_in_, self.n_features_in_ = X.shape
+		self.ucl_indep_ = self._ucl_indep(self.n_samples_in_,
+			self.n_features_in_, alpha=self.alpha)
+		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_in_,
+			self.n_features_in_, alpha=self.alpha)
 		self.X_fit_ = X
 		self.cov_ = np.cov(X.T, ddof=1)
 
 		# Cleanfit specific initialization.
 
-		_res = self.n_samples_ / 2 # Variable - Initialize to the maximum
+		_res = self.n_samples_in_ / 2 # Variable - Initialize to the maximum
 		# allowed points to be removed.
-		totp = self.n_samples_ # Constant - Initial number of points.
+		totp = self.n_samples_in_ # Constant - Initial number of points.
 		X_clean = X # Initialize second cleaned X for bootstrapping the
 		# iteration.
 		_iter = 0
@@ -554,7 +554,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		ValueError
 			If the number of features of `X_test` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			features of the training set, that is `self.n_features_in_`.
 		"""
 
 		check_is_fitted(self)
@@ -752,13 +752,13 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the number of features of `X` is not equal to the number of
-			features of the training set, that is `self.n_features_`.
+			features of the training set, that is `self.n_features_in_`.
 		"""
 
 		X = self._check_inputs(X)
 
 		n_features = X.shape[1]
-		if self.n_features_ != n_features:
+		if self.n_features_in_ != n_features:
 			raise ValueError("The number of features of `X` must be equal to"
 				" the number of features of the training set.")
 
