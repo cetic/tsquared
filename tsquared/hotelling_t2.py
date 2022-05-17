@@ -87,17 +87,17 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		on the UCL (such as predict and transform methods).
 
 		default_ucl can take one of the following values:
-		- `indep`: the default UCL used will be `self.ucl_indep_`;
-		- `not indep`: the default UCL used will be `self.ucl_not_indep_`;
-		- `auto`: depending on the test set, the default UCL used will be either
-		  `self.ucl_indep_` or `self.ucl_not_indep_`.
+		- `'indep'`: the default UCL used will be `self.ucl_indep_`;
+		- `'not indep'`: the default UCL used will be `self.ucl_not_indep_`;
+		- `'auto'`: depending on the test set, the default UCL used will be
+		  either `self.ucl_indep_` or `self.ucl_not_indep_`.
 		  To determine which UCL should be used, we verify whether the test set
 		  is a subset of the training set. If so, `self.ucl_not_indep_` will be
 		  used as the default UCL, otherwise `self.ucl_indep_` will be used.
 
-		Note that if `auto` is selected, the call to methods relying on the UCL
-		may be slowed down significantly. For this reason, `auto` is not the
-		default value of `default_ucl`.
+		Note that if `'auto'` is selected, the call to methods relying on the
+		UCL may be slowed down significantly. For this reason, `'auto'` is not
+		the default value of `default_ucl`.
 
 	References
 	----------
@@ -286,8 +286,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		"""
 
 		if not (0 < ucl_baseline < 1):
-			raise ValueError("The UCL baseline `ucl_baseline` must be strictly"
-				" between 0 and 1.")
+			raise ValueError("The UCL baseline must be strictly between 0 and"
+				" 1.")
 
 		t2_scores = self.score_samples(X)
 
@@ -501,8 +501,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	def set_default_ucl(self, ucl):
 		"""
-		Set the default upper control limit (UCL) to either `auto`, `indep` or
-		`not indep`.
+		Set the default upper control limit (UCL) to either `'auto'`, `'indep'`
+		or `'not indep'`.
 
 		Parameters
 		----------
@@ -517,13 +517,13 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Raises
 		------
 		ValueError
-			If the default upper control limit `ucl` is not either `auto`,
-			`indep` or `not indep`.
+			If the default upper control limit `ucl` is not either `'auto'`,
+			`'indep'` or `'not indep'`.
 		"""
 
 		if ucl not in {'auto', 'indep', 'not indep'}:
-			raise ValueError("The default upper control limit `ucl` must be"
-				" either `auto`, `indep` or `not indep`.")
+			raise ValueError("The default upper control limit must be either"
+				" 'auto', 'indep' or 'not indep'.")
 
 		self.default_ucl = ucl
 
@@ -550,7 +550,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the default upper control limit `self.default_ucl` is not either
-			`auto`, `indep` or `not indep`.
+			`'auto'`, `'indep'` or `'not indep'`.
 
 		ValueError
 			If the number of features of `X_test` is not equal to the number of
@@ -566,9 +566,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			return self.ucl_not_indep_
 
 		if self.default_ucl != 'auto':
-			raise ValueError("The default upper control limit"
-				"`self.default_ucl` must be either `auto`, `indep` or `not"
-				" indep`.")
+			raise ValueError("The default upper control limit must be either"
+				" 'auto', 'indep' or 'not indep'.")
 
 		X_test = self._check_test_inputs(X_test)
 
@@ -613,7 +612,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		"""
 
 		if not 0 <= alpha <= 1:
-			raise ValueError("The significance level `alpha` must be between 0"
+			raise ValueError("The significance level alpha must be between 0"
 				" and 1.")
 
 		critical_val = stats.f.ppf(q=1-alpha, dfn=n_features,
@@ -655,7 +654,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		"""
 
 		if not 0 <= alpha <= 1:
-			raise ValueError("The significance level `alpha` must be between 0"
+			raise ValueError("The significance level alpha must be between 0"
 				" and 1.")
 
 		critical_val = stats.beta.ppf(q=1-alpha, a=n_features/2,
@@ -724,8 +723,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		n_samples, n_features = X.shape
 
 		if n_samples <= n_features:
-			raise ValueError("The number of samples of `X` must be strictly"
-				" greater than the number of features of `X`.")
+			raise ValueError("The number of samples of X must be strictly"
+				" greater than the number of features of X.")
 
 		return X
 
@@ -759,7 +758,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		n_features = X.shape[1]
 		if self.n_features_in_ != n_features:
-			raise ValueError("The number of features of `X` must be equal to"
+			raise ValueError("The number of features of X must be equal to"
 				" the number of features of the training set.")
 
 		return X
