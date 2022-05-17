@@ -54,9 +54,9 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		- samples in test set are independent of the estimated parameters. In
 		  other words, these samples are not used to estimate the parameters.
 
-		For a single sample x, if the T-squared score is greater than the UCL,
-		then x will be reported as an outlier. Otherwise, x will be reported as
-		an inlier.
+		For a single sample `x`, if the T-squared score is greater than the UCL,
+		then `x` will be reported as an outlier. Otherwise, `x` will be reported
+		as an inlier.
 
 	ucl_not_indep_ : float
 		Upper control limit (UCL) when assuming:
@@ -66,9 +66,9 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		- samples in test set are not independent of the estimated parameters.
 		  In other words, these samples are used to estimate the parameters.
 
-		For a single sample x, if the T-squared score is greater than the UCL,
-		then x will be reported as an outlier. Otherwise, x will be reported as
-		an inlier.
+		For a single sample `x`, if the T-squared score is greater than the UCL,
+		then `x` will be reported as an outlier. Otherwise, `x` will be reported
+		as an inlier.
 
 	n_features_in_ : int
 		Number of features in the training data.
@@ -87,17 +87,17 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		on the UCL (such as predict and transform methods).
 
 		default_ucl can take one of the following values:
-		- 'indep': the default UCL used will be `self.ucl_indep_`;
-		- 'not indep': the default UCL used will be `self.ucl_not_indep_`;
-		- 'auto': depending on the test set, the default UCL used will be either
+		- `indep`: the default UCL used will be `self.ucl_indep_`;
+		- `not indep`: the default UCL used will be `self.ucl_not_indep_`;
+		- `auto`: depending on the test set, the default UCL used will be either
 		  `self.ucl_indep_` or `self.ucl_not_indep_`.
 		  To determine which UCL should be used, we verify whether the test set
 		  is a subset of the training set. If so, `self.ucl_not_indep_` will be
 		  used as the default UCL, otherwise `self.ucl_indep_` will be used.
 
-		Note that if 'auto' is selected, the call to methods relying on the UCL
-		may be slowed down significantly. For this reason, 'auto' is not the
-		default value of default_ucl.
+		Note that if `auto` is selected, the call to methods relying on the UCL
+		may be slowed down significantly. For this reason, `auto` is not the
+		default value of `default_ucl`.
 
 	References
 	----------
@@ -145,8 +145,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Training set of samples, where n_samples is the number of samples
-			and n_features is the number of features. It should be clean and
+			Training set of samples, where `n_samples` is the number of samples
+			and `n_features` is the number of features. It should be clean and
 			free of outliers.
 
 		y : None
@@ -160,8 +160,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Raises
 		------
 		ValueError
-			If the number of samples of `X`, n_samples, is less than or equal
-			to the number of features of `X`, n_features.
+			If the number of samples of `X`, `n_samples`, is less than or equal
+			to the number of features of `X`, `n_features`.
 		"""
 
 		X = self._check_train_inputs(X)
@@ -191,8 +191,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples, where n_samples is the number of samples and
-			n_features is the number of features.
+			Test set of samples, where `n_samples` is the number of samples and
+			`n_features` is the number of features.
 
 		Returns
 		-------
@@ -240,11 +240,11 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	def scaled_score_samples(self, X, ucl_baseline=0.1):
 		"""
-		Scaled T-squared score of each sample x. It is between 0 and 1 denoting
-		how outlier x is (i.e. the level of abnormality); 0 meaning that x is
-		most likely an inlier and 1 meaning that x is most likely an outlier.
-		Scaled T-squared scores are bounded T-squared scores, which, for
-		example, makes plotting of scores more readable.
+		Scaled T-squared score of each sample `x`. It is between 0 and 1
+		denoting how outlier `x` is (i.e. the level of abnormality); 0 meaning
+		that `x` is most likely an inlier and 1 meaning that `x` is most likely
+		an outlier. Scaled T-squared scores are bounded T-squared scores, which,
+		for example, makes plotting of scores more readable.
 
 		The `ucl_baseline` argument is the baseline value for the upper control
 		limit (UCL), used to scale T-squared scores. For example, if
@@ -252,8 +252,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		will be classified as an inlier and, similarly, any scaled T-squared
 		score greater than 0.1 will be classified as an outlier.
 
-		Each scaled T-squared score scaled_s is computed from the respective
-		T-squared score s (see the score_samples method) as follows:
+		Each scaled T-squared score `scaled_s` is computed from the respective
+		T-squared score `s` (see the `score_samples` method) as follows:
 		```
 		scaled_s = s / self.ucl(X) * ucl_baseline
 		if scaled_s > 1:
@@ -263,8 +263,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples, where n_samples is the number of samples and
-			n_features is the number of features.
+			Test set of samples, where `n_samples` is the number of samples and
+			`n_features` is the number of features.
 
 		ucl_baseline : float, default=0.05
 			Baseline value, strictly between 0 and 1, for the upper control
@@ -311,8 +311,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples, where n_samples is the number of samples and
-			n_features is the number of features.
+			Test set of samples, where `n_samples` is the number of samples and
+			`n_features` is the number of features.
 
 		Returns
 		-------
@@ -346,8 +346,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples, where n_samples is the number of samples and
-			n_features is the number of features.
+			Test set of samples, where `n_samples` is the number of samples and
+			`n_features` is the number of features.
 
 		Returns
 		-------
@@ -372,8 +372,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples, where n_samples is the number of samples and
-			n_features is the number of features.
+			Test set of samples, where `n_samples` is the number of samples and
+			`n_features` is the number of features.
 
 		Returns
 		-------
@@ -409,8 +409,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Training set of samples, where n_samples is the number of samples
-			and n_features is the number of features.
+			Training set of samples, where `n_samples` is the number of samples
+			and `n_features` is the number of features.
 
 		n : stop criteria - minimum number of outliers, default=5
 
@@ -431,8 +431,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Raises
 		------
 		ValueError
-			If the number of samples of `X`, n_samples, is less than or equal
-			to the number of features of `X`, n_features.
+			If the number of samples of `X`, `n_samples`, is less than or equal
+			to the number of features of `X`, `n_features`.
 		"""
 
 		# Initialization.
@@ -450,7 +450,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		_res = self.n_samples_in_ / 2 # Variable - Initialize to the maximum
 		# allowed points to be removed.
 		totp = self.n_samples_in_ # Constant - Initial number of points.
-		X_clean = X # Initialize second cleaned X for bootstrapping the
+		X_clean = X # Initialize second cleaned `X` for bootstrapping the
 		# iteration.
 		_iter = 0
 		hzprev = 100 # Empirically fixed based on observations on PyOD dataset -
@@ -473,7 +473,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			and _continue == 1:
 
 			X_clean2 = X_clean
-			# TODO: choose a better variable name for X_clean2.
+			# TODO: choose a better variable name for `X_clean2`.
 
 			self.fit(X_clean2)
 			X_clean = self.transform(X_clean2)
@@ -501,8 +501,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	def set_default_ucl(self, ucl):
 		"""
-		Set the default upper control limit (UCL) to either 'auto', 'indep' or
-		'not indep'.
+		Set the default upper control limit (UCL) to either `auto`, `indep` or
+		`not indep`.
 
 		Parameters
 		----------
@@ -517,13 +517,13 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Raises
 		------
 		ValueError
-			If the default upper control limit `ucl` is not either 'auto',
-			'indep' or 'not indep'.
+			If the default upper control limit `ucl` is not either `auto`,
+			`indep` or `not indep`.
 		"""
 
 		if ucl not in {'auto', 'indep', 'not indep'}:
 			raise ValueError("The default upper control limit `ucl` must be"
-				" either 'auto', 'indep' or 'not indep'.")
+				" either `auto`, `indep` or `not indep`.")
 
 		self.default_ucl = ucl
 
@@ -537,8 +537,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X_test : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples, where n_samples is the number of samples and
-			n_features is the number of features.
+			Test set of samples, where `n_samples` is the number of samples and
+			`n_features` is the number of features.
 
 		Returns
 		-------
@@ -550,7 +550,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		------
 		ValueError
 			If the default upper control limit `self.default_ucl` is not either
-			'auto', 'indep' or 'not indep'.
+			`auto`, `indep` or `not indep`.
 
 		ValueError
 			If the number of features of `X_test` is not equal to the number of
@@ -567,8 +567,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		if self.default_ucl != 'auto':
 			raise ValueError("The default upper control limit"
-				"`self.default_ucl` must be either 'auto', 'indep' or 'not"
-				" indep'.")
+				"`self.default_ucl` must be either `auto`, `indep` or `not"
+				" indep`.")
 
 		X_test = self._check_test_inputs(X_test)
 
@@ -674,8 +674,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Set of samples to check / convert, where n_samples is the number of
-			samples and n_features is the number of features.
+			Set of samples to check / convert, where `n_samples` is the number
+			of samples and `n_features` is the number of features.
 
 		Returns
 		-------
@@ -704,8 +704,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Training set of samples to check / convert, where n_samples is the
-			number of samples and n_features is the number of features.
+			Training set of samples to check / convert, where `n_samples` is the
+			number of samples and `n_features` is the number of features.
 
 		Returns
 		-------
@@ -715,8 +715,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Raises
 		------
 		ValueError
-			If the number of samples of `X`, n_samples, is less than or equal
-			to the number of features of `X`, n_features.
+			If the number of samples of `X`, `n_samples`, is less than or equal
+			to the number of features of `X`, `n_features`.
 		"""
 
 		X = self._check_inputs(X)
@@ -740,8 +740,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples to check / convert, where n_samples is the
-			number of samples and n_features is the number of features.
+			Test set of samples to check / convert, where `n_samples` is the
+			number of samples and `n_features` is the number of features.
 
 		Returns
 		-------
