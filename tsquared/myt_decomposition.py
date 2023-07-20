@@ -148,7 +148,7 @@ class MYTDecomposition:
 		ValueError
 			If the number of features of `X` is not equal to the number of
 			features of the training set, that is
-			`self.hotelling_t2.n_features_`.
+			`self.hotelling_t2.n_features_in_`.
 		"""
 
 		check_is_fitted(self.hotelling_t2)
@@ -173,7 +173,7 @@ class MYTDecomposition:
 
 		check_is_fitted(self.hotelling_t2)
 
-		n_samples = self.hotelling_t2.n_samples_
+		n_samples = self.hotelling_t2.n_samples_in_
 		critical_val = stats.f.ppf(q=1-self.hotelling_t2.alpha, dfn=1,
 			dfd=n_samples-1)
 
@@ -206,7 +206,7 @@ class MYTDecomposition:
 		ValueError
 			If the number of features of `X` is not equal to the number of
 			features of the training set, that is
-			`self.hotelling_t2.n_features_`.
+			`self.hotelling_t2.n_features_in_`.
 		"""
 
 		check_is_fitted(self.hotelling_t2)
@@ -250,9 +250,9 @@ class MYTDecomposition:
 
 		check_is_fitted(self.hotelling_t2)
 
-		n_samples = self.hotelling_t2.n_samples_
-		n_cond_vars = self.hotelling_t2.n_features_ - 1 # Number of conditioned
-		# variables.
+		n_samples = self.hotelling_t2.n_samples_in_
+		n_cond_vars = self.hotelling_t2.n_features_in_ - 1 # Number of
+		# conditioned variables.
 		critical_val = stats.f.ppf(q=1-self.hotelling_t2.alpha, dfn=1,
 			dfd=n_samples-n_cond_vars-1)
 
