@@ -254,6 +254,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		Each scaled T-squared score `scaled_s` is computed from the respective
 		T-squared score `s` (see the `score_samples` method) as follows:
+
 		```
 		scaled_s = s / self.ucl(X) * ucl_baseline
 		if scaled_s > 1:
@@ -762,73 +763,3 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				"the number of features of the training set.")
 
 		return X
-
-if __name__ == '__main__':
-	import matplotlib.pyplot as plt
-
-	np.random.seed(42)
-
-	n = 1000
-	m = 100
-	p = 4
-
-	true_mean = np.array([4, -1.3, 8.7, -5.4])
-	true_cov = np.array([
-		[1, 0.4, -0.4, 0.1],
-		[0.4, 1, 0.6, -0.2],
-		[-0.4, 0.6, 1, 0.02],
-		[0.1, -0.2, 0.02, 1]
-	])
-
-	train = np.random.multivariate_normal(true_mean, true_cov, size=n)
-	test = np.random.multivariate_normal(true_mean, true_cov, size=m)
-
-	print("--- Inputs ---\n")
-
-	print(f"True mean vector: {true_mean}")
-	print(f"True covariance matrix:\n{true_cov}")
-
-	print("\n--- Hotelling's T-squared fitting on the training set---\n")
-
-	hotelling = HotellingT2()
-	hotelling.fit(train)
-
-	print(f"Computed mean vector: {hotelling.mean_}")
-	print(f"Computed covariance matrix:\n{hotelling.cov_}")
-	print(f"Hotelling's T-squared UCL: {hotelling.ucl(test)}")
-
-	print("\n--- Hotelling's T-squared scores on the test set ---\n")
-
-	t2_scores = hotelling.score_samples(test)
-	scaled_t2_scores = hotelling.scaled_score_samples(test)
-
-	print(f"Hotelling's T-squared score for each sample:\n{t2_scores}")
-	print(f"Scaled Hotelling's T-squared score for each sample:"
-		f"\n{scaled_t2_scores}")
-
-	print("\n--- Outlier detection ---\n")
-
-	pred = hotelling.predict(test)
-	outliers = test[pred == -1]
-
-	print(f"Detected outliers:\n{outliers}")
-
-	print("\n--- Hotelling's T-squared score on the test set ---\n")
-
-	t2_score = hotelling.score(test)
-	ucl = n / (n + 1) * hotelling.ucl_indep_
-
-	print(f"Hotelling's T-squared score for the test set: {t2_score}")
-	print(f"Do the training set and the test set come from the same "
-		f"distribution? {t2_score <= ucl}")
-
-	fig, ax = plt.subplots(figsize=(14, 8))
-	plt.scatter(range(scaled_t2_scores.size), scaled_t2_scores)
-	ucl_line = plt.axhline(y=0.1, color='r', linestyle='-')
-	ax.set_title('Scaled Hotelling\'s T2 scores')
-	ax.set_xlabel('Index')
-	ax.set_ylabel('Scaled Hotelling\'s T2 score')
-	ucl_line.set_label('UCL')
-	plt.legend()
-	fig.tight_layout()
-	plt.show()
