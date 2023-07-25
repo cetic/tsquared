@@ -6,8 +6,7 @@ Python implementation of Hotelling's T-squared (T2) for process monitoring and M
 
 1. [Features](#features)
 2. [Installation](#installation)
-3. [Specific Implementation](#implementation)
-4. [Questions](#questions)
+3. [Questions](#questions)
 	- [How TSquared is related to t-test?](#questions_ttest)
 	- [How TSquared is related to Mahalanobis Distance?](#questions_mahalanobis_dist)
 	- [How TSquared is related to MCD?](#questions_mcd)
@@ -19,7 +18,7 @@ Python implementation of Hotelling's T-squared (T2) for process monitoring and M
 	- [Is a TSquared monitoring sufficient? Or do I still need univariate monitoring?](#questions_sufficient)
 	- [UCL, what does that mean in multivariate context? How to compute UCL?](#questions_ucl)
 	- [My data are not normally distributed. Does it help to apply a Box-Cox transformation on each variables?](#questions_boxcox)
-5. [References](#references)
+4. [References](#references)
 
 ## <a name="features"></a> Features
 
@@ -42,41 +41,6 @@ TSquared can be installed from PyPI:
 
 ```sh
 pip install tsquared
-```
-
-## <a name="implementation"></a> Specific Implementation
-
-Hotelling's T2 is initially for sampled distribution comparison to a reference distribution,
-known as a generalization of the t-statistic for multivariate hypothesis testing.
-
-For monitoring, only a single multivariate observation is compared to a reference distribution.
-
-```python
-from tsquared import HotellingT2
-
-clf = HotellingT2()
-
-# Hotelling's T2 without dataset cleaning.
-clf.fit(X_train)
-test_scores = clf.score_samples(X_test)
-	
-# Hotelling's T2 with one-pass cleaning.
-clf.cleanfit(X_train, iter=1)
-respg = multivariate_normality(X_train, alpha=.05)
-test_scores = clf.score_samples(X_test_norm)
-	
-# Hotelling's T2 with two-pass cleaning.
-clf.cleanfit(X_train, iter=2)
-respg=multivariate_normality(X_train, alpha=.05)
-test_scores = clf.score_samples(X_test_norm)
-	
-# Hotelling's T2 with infinite-pass cleaning (set a high number, size criteria will stop iterations).
-clf.cleanfit(X_train, iter=100)
-test_scores = clf.score_samples(X_test_norm)
-	
-# Hotelling's T2 with smart cleaning (decision based on multivariate normality coefficient).
-clf.cleanfit(X_train)
-test_scores = clf.score_samples(X_test, alpha=.05)
 ```
 
 ## <a name="questions"></a> Questions
