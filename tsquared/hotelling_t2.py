@@ -113,7 +113,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 	Examples
 	--------
-	>>> import numpy as np
+    >>> import numpy as np
 	>>> from tsquared import HotellingT2
 	>>> true_mean = np.array([0, 0])
 	>>> true_cov = np.array([[.8, .3],
@@ -137,52 +137,75 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		self.default_ucl = 'indep'
 
-	def fit(self, X, y=None):
+	def fit(self, X,y=None ,old_model : BaseEstimator = None):
 		"""
 		Fit Hotelling's T-squared. Specifically, compute the mean vector, the
 		covariance matrix on X and the upper control limits.
 
+		Note that calling ``fit()`` multiple times will cause the model object to be
+		re-fit from scratch. To resume training from a previous checkpoint, explicitly
+		pass ``old_model`` argument.
+
 		Parameters
 		----------
 		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Training set of samples, where `n_samples` is the number of samples
-			and `n_features` is the number of features. It should be clean and
-			free of outliers.
+		Training set of samples, where `n_samples` is the number of samples
+		and `n_features` is the number of features. It should be clean and
+		free of outliers.
 
 		y : None
-			Not used, present for scikit-learn's API consistency by convention.
+		Not used, present for scikit-learn's API consistency by convention.
+
+		old_model : HotellingT2 model
+		model to be loaded before training (allows training continuation).
 
 		Returns
 		-------
 		self : object
-			Returns the instance itself.
+		Returns the instance itself.
 
 		Raises
 		------
 		ValueError
-			If the number of samples of `X`, `n_samples`, is less than or equal
-			to the number of features of `X`, `n_features`.
+		If the number of samples of `X`, `n_samples`, is less than or equal
+		to the number of features of `X`, `n_features`.
 		"""
+		if old_model:
+			self.mean_ = old_model.mean_
+			self.cov_ = old_model.cov_
+			self.n_samples_in_ = old_model.n_samples_in_
+			self.n_features_in_ = old_model.n_features_in_
+			X = self._check_train_inputs(X)
+			n1 = self.n_samples_in_
+			n2 = X.shape[0]
 
-		X = self._check_train_inputs(X)
+			mean1 = self.mean_
+			mean2 = X.mean(axis=0)
+			cov1 = self.cov_
+			cov2 = np.cov(X.T, ddof=1)
+			if self.n_features_in_ == 1:
+				cov2 = cov2.reshape(1, 1)
+			self.n_samples_in_ = n1 + n2
+			self.n_features_in_ = X.shape[1]
+			self.mean_ = (n1 * mean1 + n2 * mean2) / (n1 + n2)
+			self.cov_ = (1 / (n1 + n2)) * (n1 * cov1+n1*np.dot(mean1,mean1.T)+n2*cov2+n2*np.dot(mean2,mean2.T))-np.dot(self.mean,self.mean.T)
+			if self.n_features_in_ == 1:
+				self.cov_ = self.cov_.reshape(1, 1)
+		else:
+			X = self._check_train_inputs(X)
+			self.n_samples_in_, self.n_features_in_ = X.shape
+			self.mean_ = X.mean(axis=0)
+			self.cov_ = np.cov(X.T, ddof=1)
+			if self.n_features_in_ == 1:
+				self.cov_ = self.cov_.reshape(1, 1)
 
-		self.n_samples_in_, self.n_features_in_ = X.shape
-
-		self.mean_ = X.mean(axis=0)
-		self.cov_ = np.cov(X.T, ddof=1)
-		if self.n_features_in_ == 1:
-			self.cov_ = self.cov_.reshape(1, 1)
-
-		self.current_sum=X.sum(axis=0) # for training continuation 
-
-		self.ucl_indep_ = self._ucl_indep(self.n_samples_in_,
-			self.n_features_in_, alpha=self.alpha)
-		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_in_,
-			self.n_features_in_, alpha=self.alpha)
+		self.ucl_indep_ = self._ucl_indep(self.n_samples_in_, self.n_features_in_, alpha=self.alpha)
+		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_in_, self.n_features_in_, alpha=self.alpha)
 
 		self.X_fit_ = X
 
 		return self
+
 
 	def score_samples(self, X):
 		"""
