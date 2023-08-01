@@ -101,3 +101,10 @@ $RECYCLE.BIN/
 .directory
 .Trash-*
 .nfs*
+.idea/vcs.xml
+.idea/tsquared.iml
+.idea/modules.xml
+.idea/misc.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/workspace.xml
