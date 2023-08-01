@@ -173,6 +173,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		if self.n_features_in_ == 1:
 			self.cov_ = self.cov_.reshape(1, 1)
 
+		self.current_sum=X.sum(axis=0) # for training continuation 
+
 		self.ucl_indep_ = self._ucl_indep(self.n_samples_in_,
 			self.n_features_in_, alpha=self.alpha)
 		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_in_,
