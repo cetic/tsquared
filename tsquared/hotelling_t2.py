@@ -188,7 +188,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			self.n_samples_in_ = n1 + n2
 			self.n_features_in_ = X.shape[1]
 			self.mean_ = (n1 * mean1 + n2 * mean2) / (n1 + n2)
-			self.cov_ = (1 / (n1 + n2)) * (n1 * cov1+n1*np.dot(mean1,mean1.T)+n2*cov2+n2*np.dot(mean2,mean2.T))-np.dot(self.mean,self.mean.T)
+			self.cov_ = (1 / (n1 + n2)) * (n1 * cov1+n1*np.dot(mean1,mean1.T)+n2*cov2+n2*np.dot(mean2,mean2.T))-np.dot(self.mean_,self.mean_.T)
 			if self.n_features_in_ == 1:
 				self.cov_ = self.cov_.reshape(1, 1)
 		else:
