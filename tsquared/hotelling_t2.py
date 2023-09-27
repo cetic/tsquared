@@ -169,8 +169,14 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		ValueError
 		If the number of samples of `X`, `n_samples`, is less than or equal
 		to the number of features of `X`, `n_features`.
+		ValueError
+		If "Old model is not an instance of HotellingT2" .
+		ValueError
+		If "The number of features of the old model is not equal "
+			"to the number of features of the new model ."
 		"""
 		if old_model:
+			self._check_continuation(old_model,X.shape[1])
 			self.mean_ = old_model.mean_
 			self.cov_ = old_model.cov_
 			self.n_samples_in_ = old_model.n_samples_in_
@@ -649,6 +655,38 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				"greater than the number of features of X.")
 
 		return X
+
+	def _check_continuation(self,old_model, n_features_new):
+		"""
+		Test continuation
+
+		Check the old model and the new data if continual training is possible
+
+		Parameters
+		----------
+		old_model : BaseEstimator
+		Old model used for continual training
+		n_features_new : int
+		Number of features in the training data.
+
+
+
+		Raises
+		------
+		ValueError
+			If "Old model is not an instance of HotellingT2" .
+		ValueError
+			If "The number of features of the old model is not equal "
+				"to the number of features of the new model ."
+		"""
+		if not isinstance(old_model,HotellingT2):
+			raise ValueError("Old model must be an instance of HotellingT2")
+
+		if old_model.n_features_in_ != n_features_new:
+			raise ValueError("The number of features of the old model must be equal "
+				"to the number of features of the new model .")
+
+
 
 	def _check_test_inputs(self, X):
 		"""

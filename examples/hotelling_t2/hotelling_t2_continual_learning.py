@@ -9,10 +9,10 @@ seed = 1
 np.random.seed(seed)
 
 # Generate data.
-n1_train = 1000
+n1_train = 3000
 n1_test = 100
 
-n2_train = 2000
+n2_train = 6000
 n2_test = 100
 
 true_mean = np.array([4, -1.3, 8.7, -5.4])
