@@ -9,10 +9,11 @@ seed = 1
 np.random.seed(seed)
 
 # Generate data.
-n1_train = 3000
-n1_test = 100
+n1_train = 500
+n1_test = 10000
 
-n2_train = 6000
+n2_train =10000
+
 n2_test = 100
 
 true_mean = np.array([4, -1.3, 8.7, -5.4])
@@ -110,20 +111,31 @@ print("\n--- Hotelling's T-squared training on 1 and 2 --\n")
 hotelling4 = HotellingT2()
 train3=np.concatenate((train1, train2), axis=0)
 test3=np.concatenate((test1, test2), axis=0)
-hotelling4.fit(train3,old_model=hotelling)
+hotelling4.fit(train3)
 
-print(f"Computed mean vector: {hotelling3.mean_}")
-print(f"Computed covariance matrix:\n{hotelling3.cov_}")
-print(f"Hotelling's T-squared UCL: {hotelling3.ucl(test3)}")
+print(f"Computed mean vector: {hotelling4.mean_}")
+print(f"Computed covariance matrix:\n{hotelling4.cov_}")
+print(f"Hotelling's T-squared UCL: {hotelling4.ucl(test3)}")
 
 # Compute Hotelling's T-squared score for each sample in the test set.
 print("\n  test set 2 ---\n")
 
 ucl_baseline = 0.1
-t2_scores = hotelling3.score_samples(test3)
-scaled_t2_scores = hotelling3.scaled_score_samples(test3,
+t2_scores = hotelling4.score_samples(test3)
+scaled_t2_scores = hotelling4.scaled_score_samples(test3,
 	ucl_baseline=ucl_baseline)
 
 print(f"Hotelling's T-squared score for each sample:\n{t2_scores}")
 print(f"Scaled Hotelling's T-squared score for each sample:"
 	f"\n{scaled_t2_scores}")
+
+errormean1=sum(abs(hotelling3.mean_-true_mean))/sum(true_mean)
+errormean2=sum(abs(hotelling4.mean_-true_mean))/sum(true_mean)
+errorcov1=sum(sum(abs(hotelling3.cov_-true_cov)))/sum(sum(true_cov))
+errorcov2=sum(sum(abs(hotelling4.cov_-true_cov)))/sum(sum(true_cov))
+print(f"percentage errors mean continual training {errormean1}")
+print(f"percentage errors mean from scratch {errormean2}")
+print(f"percentage errors cov continual training {errorcov1}")
+print(f"percentage errors cov  from scratch {errorcov2}")
+print(hotelling3.cov_-hotelling4.cov_)
+print(hotelling3.mean_-hotelling4.mean_)
