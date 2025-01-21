@@ -1,171 +1,107 @@
 import numpy as np
-import pingouin as pg
 from scipy import stats
 from sklearn.base import BaseEstimator, OutlierMixin, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
+from tsquared.threshold import ThresholdCalculator
+
+
 class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 	"""Hotelling's T-squared test.
 
-	Hotelling's T-squared test is an unsupervised multivariate outlier
-	detection.
+    Hotelling's T-squared test is an unsupervised multivariate outlier
+    detection method.
 
-	When fitting on a (clean) training set, the real distribution, supposed to
-	be a multivariate normal distribution, is estimated. In order to achieve
-	this, these parameters are estimated:
+    When fitting on a (clean) training set, the real distribution, supposed to
+    be a multivariate normal distribution, is estimated. In order to achieve
+    this, these parameters are estimated:
 
-	- the empirical mean for each feature;
-	- the sample covariance matrix.
+    - the empirical mean for each feature;
+    - the sample covariance matrix.
 
-	In addition, two upper control limits (UCLs) are computed. One of these is
-	chosen to classify new samples. See the "Attributes" section for an
-	explanation of the difference between these two limits: ucl_indep_ and
-	ucl_not_indep_. Note that the first one is the UCL used by default, but this
-	behavior can be changed by calling the set_default_ucl method.
+    Two methods are available for computing the threshold/upper control limit (UCL):
+    - 'statistical': Uses the classical F-distribution based approach (default)
+    - 'optimization': Uses convex optimization to find maximum T-squared value
+                     under box constraints
 
-	When predicting, for each sample x from a test set, a T-squared score is
-	computed and compared to the default upper control limit. If this score
-	exceeds this limit, then x will be classified as an outlier. Otherwise, x
-	will be classified as an inlier.
+    Parameters
+    ----------
+    alpha : float, between 0 and 1, default=0.05
+        The significance level for computing the upper control limit.
+    threshold_method : {'statistical', 'optimization'}, default='statistical'
+        Method to use for computing the T-squared threshold.
+        - 'statistical': Uses F-distribution based UCL (default)
+        - 'optimization': Uses optimization-based threshold
 
-	Parameters
-	----------
-	alpha : float, between 0 and 1, default=0.05
-		The significance level for computing the upper control limit.
+    Attributes
+    ----------
+    mean_ : ndarray, shape (n_features,)
+        Per-feature empirical mean, estimated from the training set.
 
-	Attributes
-	----------
-	mean_ : ndarray, shape (n_features,)
-		Per-feature empirical mean, estimated from the training set.
+        Equal to `X.mean(axis=0)`.
 
-		Equal to `X.mean(axis=0)`.
+    cov_ : ndarray, shape (n_features, n_features)
+        Sample covariance matrix estimated from the training set.
 
-	cov_ : ndarray, shape (n_features, n_features)
-		Sample covariance matrix estimated from the training set.
+        Equal to `np.cov(X.T, ddof=1)`.
 
-		Equal to `np.cov(X.T, ddof=1)`.
+    ucl_indep_ : float
+        Upper control limit (UCL) computed based on the selected threshold_method.
+        For 'statistical' method, this represents the UCL when assuming samples
+        in test set are independent of the estimated parameters.
 
-	ucl_indep_ : float
-		Upper control limit (UCL) when assuming:
+    ucl_not_indep_ : float
+        Upper control limit (UCL) when assuming samples in test set are not
+        independent of the estimated parameters. Only used with 'statistical' method.
 
-		- the parameters of the underlying multivariate normal distribution are
-		  unknown and are estimated using a training set;
-		- samples in test set are independent of the estimated parameters. In
-		  other words, these samples are not used to estimate the parameters.
+    n_features_in_ : int
+        Number of features in the training data.
 
-		For a single sample `x`, if the T-squared score is greater than the UCL,
-		then `x` will be reported as an outlier. Otherwise, `x` will be reported
-		as an inlier.
+    n_samples_in_ : int
+        Number of samples in the training data.
 
-	ucl_not_indep_ : float
-		Upper control limit (UCL) when assuming:
+    X_fit_ : {array-like, sparse matrix}, shape (n_samples, n_features)
+        A reference to the training set of samples.
 
-		- the parameters of the underlying multivariate normal distribution are
-		  unknown and are estimated using a training set;
-		- samples in test set are not independent of the estimated parameters.
-		  In other words, these samples are used to estimate the parameters.
+    default_ucl : {'auto', 'indep', 'not indep'}, default='indep'
+        The upper control limit (UCL) to be used. Only relevant for
+        'statistical' threshold method.
+    """
 
-		For a single sample `x`, if the T-squared score is greater than the UCL,
-		then `x` will be reported as an outlier. Otherwise, `x` will be reported
-		as an inlier.
+	def __init__(self, alpha=0.05, threshold_method='statistical'):
+		if threshold_method not in ['statistical', 'optimization']:
+			raise ValueError("threshold_method must be either 'statistical' or 'optimization'")
 
-	n_features_in_ : int
-		Number of features in the training data.
+		if not 0 < alpha < 1:
+			raise ValueError("The significance level alpha must be between 0 and 1")
 
-	n_samples_in_ : int
-		Number of samples in the training data.
-
-	X_fit_ : {array-like, sparse matrix}, shape (n_samples, n_features)
-		A reference to the training set of samples. It is used to infer which
-		UCL should be used.
-
-	Other variables
-	---------------
-	default_ucl : {'auto', 'indep', 'not indep'}, default='indep'
-		The upper control limit (UCL) to be used. It affects the methods relying
-		on the UCL (such as predict and transform methods).
-
-		default_ucl can take one of the following values:
-		- `'indep'`: the default UCL used will be `self.ucl_indep_`;
-		- `'not indep'`: the default UCL used will be `self.ucl_not_indep_`;
-		- `'auto'`: depending on the test set, the default UCL used will be
-		  either `self.ucl_indep_` or `self.ucl_not_indep_`.
-		  To determine which UCL should be used, we verify whether the test set
-		  is a subset of the training set. If so, `self.ucl_not_indep_` will be
-		  used as the default UCL, otherwise `self.ucl_indep_` will be used.
-
-		Note that if `'auto'` is selected, the call to methods relying on the
-		UCL may be slowed down significantly. For this reason, `'auto'` is not
-		the default value of `default_ucl`.
-
-	References
-	----------
-	Camil Fuchs, Ron S. Kenett (1998). Multivariate Quality Control: Theory and
-	Applications. Quality and Reliability.
-	Taylor & Francis.
-	ISBN: 9780367579326
-
-	Robert L. Mason, John C. Young (2001). Multivariate Statistical Process
-	Control with Industrial Applications.
-	Society for Industrial and Applied Mathematics.
-	ISBN: 9780898714968
-
-	Examples
-	--------
-	>>> import numpy as np
-	>>> from tsquared import HotellingT2
-	>>> true_mean = np.array([0, 0])
-	>>> true_cov = np.array([[.8, .3],
-	...                      [.3, .4]])
-	>>> X = np.random.RandomState(0).multivariate_normal(mean=true_mean,
-	...                                                  cov=true_cov,
-	...                                                  size=500)
-	>>> X_test = np.array([[0, 0],
-	...                    [3, 3]])
-	>>> clf = HotellingT2().fit(X)
-	>>> clf.predict(X_test)
-	array([ 1, -1])
-	>>> clf.score_samples(X_test)
-	array([5.16615725e-03, 2.37167895e+01])
-	>>> clf.ucl(X_test)
-	6.051834565565274
-	"""
-
-	def __init__(self, alpha=0.05):
 		self.alpha = alpha
-
+		self.threshold_method = threshold_method
 		self.default_ucl = 'indep'
+
 
 	def fit(self, X, y=None):
 		"""
-		Fit Hotelling's T-squared. Specifically, compute the mean vector, the
-		covariance matrix on X and the upper control limits.
+        Fit Hotelling's T-squared. Specifically, compute the mean vector, the
+        covariance matrix on X and the upper control limits.
 
-		Parameters
-		----------
-		X : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Training set of samples, where `n_samples` is the number of samples
-			and `n_features` is the number of features. It should be clean and
-			free of outliers.
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            Training set of samples, where `n_samples` is the number of samples
+            and `n_features` is the number of features. It should be clean and
+            free of outliers.
 
-		y : None
-			Not used, present for scikit-learn's API consistency by convention.
+        y : None
+            Not used, present for scikit-learn's API consistency by convention.
 
-		Returns
-		-------
-		self : object
-			Returns the instance itself.
-
-		Raises
-		------
-		ValueError
-			If the number of samples of `X`, `n_samples`, is less than or equal
-			to the number of features of `X`, `n_features`.
-		"""
-
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
+        """
 		X = self._check_train_inputs(X)
-
 		self.n_samples_in_, self.n_features_in_ = X.shape
 
 		self.mean_ = X.mean(axis=0)
@@ -173,14 +109,27 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		if self.n_features_in_ == 1:
 			self.cov_ = self.cov_.reshape(1, 1)
 
-		self.ucl_indep_ = self._ucl_indep(self.n_samples_in_,
-			self.n_features_in_, alpha=self.alpha)
-		self.ucl_not_indep_ = self._ucl_not_indep(self.n_samples_in_,
-			self.n_features_in_, alpha=self.alpha)
+		if self.threshold_method == 'statistical':
+			self.ucl_indep_ = ThresholdCalculator.statistical_ucl(
+				self.n_samples_in_,
+				self.n_features_in_,
+				self.alpha
+			)
+			self.ucl_not_indep_ = self._ucl_not_indep(
+				self.n_samples_in_,
+				self.n_features_in_,
+				self.alpha
+			)
+		else:  # 'optimization'
+			self.ucl_indep_ = ThresholdCalculator.optimization_based(
+				self.mean_,
+				self.cov_
+			)
+			self.ucl_not_indep_ = self.ucl_indep_  # Same threshold for both in optimization method
 
 		self.X_fit_ = X
-
 		return self
+
 
 	def score_samples(self, X):
 		"""
@@ -237,6 +186,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		# https://stackoverflow.com/questions/14758283/is-there-a-numpy-scipy-dot-product-calculating-only-the-diagonal-entries-of-the
 
 		return t2_scores
+
 
 	def scaled_score_samples(self, X, ucl_baseline=0.1):
 		"""
@@ -297,6 +247,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		return scaled_t2_scores
 
+
 	def score(self, X):
 		"""
 		T-squared score of an entire set of samples. The higher the score, the
@@ -338,6 +289,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		return t2_score
 
+
 	def predict(self, X):
 		"""
 		Perform classification on samples in `X`.
@@ -365,6 +317,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		t2_scores = self.score_samples(X)
 
 		return np.where(t2_scores > self.ucl(X), -1, 1)
+
 
 	def transform(self, X):
 		"""
@@ -396,6 +349,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		return X[t2_scores <= self.ucl(X)]
 
+
 	def set_default_ucl(self, ucl):
 		"""
 		Set the default upper control limit (UCL) to either `'auto'`, `'indep'`
@@ -426,35 +380,30 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		return self
 
+
 	def ucl(self, X_test):
 		"""
-		Return the value of the upper control limit (UCL) depending on
-		`self.default_ucl` and `X_test`.
+        Return the value of the upper control limit (UCL) depending on
+        self.default_ucl and X_test.
 
-		Parameters
-		----------
-		X_test : {array-like, sparse matrix}, shape (n_samples, n_features)
-			Test set of samples, where `n_samples` is the number of samples and
-			`n_features` is the number of features.
+        For 'optimization' threshold method, this always returns ucl_indep_
+        regardless of default_ucl setting.
 
-		Returns
-		-------
-		ucl : float
-			Returns the value of the upper control limit (UCL) depending on
-			`self.default_ucl` and `X_test`.
+        Parameters
+        ----------
+        X_test : {array-like, sparse matrix}, shape (n_samples, n_features)
+            Test set of samples, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
 
-		Raises
-		------
-		ValueError
-			If the default upper control limit `self.default_ucl` is not either
-			`'auto'`, `'indep'` or `'not indep'`.
-
-		ValueError
-			If the number of features of `X_test` is not equal to the number of
-			features of the training set, that is `self.n_features_in_`.
-		"""
-
+        Returns
+        -------
+        ucl : float
+            Returns the value of the upper control limit (UCL).
+        """
 		check_is_fitted(self)
+
+		if self.threshold_method == 'optimization':
+			return self.ucl_indep_
 
 		if self.default_ucl == 'indep':
 			return self.ucl_indep_
@@ -464,100 +413,34 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		if self.default_ucl != 'auto':
 			raise ValueError("The default upper control limit must be either "
-				"'auto', 'indep' or 'not indep'.")
+							 "'auto', 'indep' or 'not indep'.")
 
 		X_test = self._check_test_inputs(X_test)
 
 		# Test if `X_test` is not a subset of `self.X_fit_` (may be slow).
 		if X_test.shape[0] > self.X_fit_.shape[0] or \
-			not np.isin(X_test, self.X_fit_).all():
-
+				not np.isin(X_test, self.X_fit_).all():
 			return self.ucl_indep_
 
 		return self.ucl_not_indep_
 
-	def _ucl_indep(self, n_samples, n_features, alpha=0.05):
-		"""
-		Compute the upper control limit (UCL) when assuming:
-
-		- the parameters of the underlying multivariate normal distribution are
-		  unknown and are estimated using a training set;
-		- samples in test set are independent of the estimated parameters. In
-		  other words, these samples are not used to estimate the parameters.
-
-		Parameters
-		----------
-		n_samples : int
-			The number of samples of the training set.
-
-		n_features : int
-			The number of features of the training set.
-
-		alpha : float, between 0 and 1, default=0.05
-			The significance level.
-
-		Returns
-		-------
-		ucl : float
-			Returns the upper control limit (UCL) when samples in test set are
-			independent of the estimated parameters.
-
-		Raises
-		------
-		ValueError
-			If the significance level `alpha` is not between 0 and 1.
-		"""
-
-		if not 0 <= alpha <= 1:
-			raise ValueError("The significance level alpha must be between 0 "
-				"and 1.")
-
-		critical_val = stats.f.ppf(q=1-alpha, dfn=n_features,
-			dfd=n_samples-n_features)
-
-		return n_features * (n_samples + 1) * (n_samples - 1) / n_samples / \
-			(n_samples - n_features) * critical_val
 
 	def _ucl_not_indep(self, n_samples, n_features, alpha=0.05):
 		"""
-		Compute the upper control limit (UCL) when assuming:
+        Compute the upper control limit (UCL) when assuming samples in test set
+        are not independent of the estimated parameters.
 
-		- the parameters of the underlying multivariate normal distribution are
-		  unknown and are estimated using a training set;
-		- samples in test set are not independent of the estimated parameters.
-		  In other words, these samples are used to estimate the parameters.
-
-		Parameters
-		----------
-		n_samples : int
-			The number of samples of the training set.
-
-		n_features : int
-			The number of features of the training set.
-
-		alpha : float, between 0 and 1, default=0.05
-			The significance level.
-
-		Returns
-		-------
-		ucl : float
-			Returns the upper control limit (UCL) when samples in test set are
-			not independent of the estimated parameters.
-
-		Raises
-		------
-		ValueError
-			If the significance level `alpha` is not between 0 and 1.
-		"""
-
+        Only used with 'statistical' threshold method.
+        """
 		if not 0 <= alpha <= 1:
 			raise ValueError("The significance level alpha must be between 0 "
-				"and 1.")
+							 "and 1.")
 
-		critical_val = stats.beta.ppf(q=1-alpha, a=n_features/2,
-			b=(n_samples-n_features-1)/2)
+		critical_val = stats.beta.ppf(q=1 - alpha, a=n_features / 2,
+									  b=(n_samples - n_features - 1) / 2)
 
 		return (n_samples - 1) ** 2 / n_samples * critical_val
+
 
 	def _check_inputs(self, X):
 		"""
@@ -588,6 +471,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		)
 
 		return X
+
 
 	def _check_train_inputs(self, X):
 		"""
@@ -624,6 +508,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 				"greater than the number of features of X.")
 
 		return X
+
 
 	def _check_test_inputs(self, X):
 		"""

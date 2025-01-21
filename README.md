@@ -19,6 +19,7 @@ Python implementation of Hotelling's T-squared (T2) for process monitoring and M
 	- [UCL, what does that mean in multivariate context? How to compute UCL?](#questions_ucl)
 	- [My data are not normally distributed. Does it help to apply a Box-Cox transformation on each variables?](#questions_boxcox)
 4. [References](#references)
+5. [Threshold Calculation Methods](#threshold-methods)
 
 ## <a name="features"></a> Features
 
@@ -26,6 +27,10 @@ Python implementation of Hotelling's T-squared (T2) for process monitoring and M
 2. Python scikit-learn -like implementation
 3. Efficient with large datasets
 4. MYT decomposition
+5. Multiple threshold calculation methods:
+   - Statistical approach based on F-distribution (default)
+   - Optimization-based approach using convex optimization
+
 
 ## <a name="installation"></a> Installation
 
@@ -151,3 +156,35 @@ The experiment was done using TSquared auto-cleaning function and Box-Cox transf
 <!---
 <a href="https://github.com/cetic/TSquared/tree/master/figures/z-score.jpg"><img class="fig" src="https://raw.githubusercontent.com/cetic/tsquared/master/figures/z-score.jpg" style="width:100%; height:auto;"/></a>
 --->
+
+## <a name="threshold-methods"></a> Threshold Calculation Methods
+
+TSquared provides two methods for calculating threshold values:
+
+### Statistical Method (Default)
+The traditional approach based on F-distribution theory. This method:
+- Uses the F-distribution to determine critical values
+- Accounts for sample size and number of features
+- Provides separate thresholds for independent and non-independent cases
+
+### Optimization-Based Method
+An alternative approach that uses convex optimization to determine thresholds. This method:
+- Maximizes the T-squared value under box constraints
+- Uses the 3-sigma rule for constraint definition
+- Provides a single threshold value based on the data distribution
+
+Example usage:
+
+```python
+from tsquared import HotellingT2, THRESHOLD_OPTIMIZATION
+
+# Using default statistical method
+clf_statistical = HotellingT2().fit(X)
+
+# Using optimization-based method
+clf_optimization = HotellingT2(threshold_method=THRESHOLD_OPTIMIZATION).fit(X)
+```
+
+Choose between methods based on your needs:
+- Use the statistical method (default) when working with well-behaved normal distributions and when you need to distinguish between independent/non-independent cases
+- Use the optimization method when you need a more robust threshold based on actual data boundaries, or when dealing with slightly non-normal distributions

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from tsquared import HotellingT2
+from tsquared import HotellingT2, THRESHOLD_STATISTICAL, THRESHOLD_OPTIMIZATION
 
 seed = 1
 
@@ -14,73 +14,114 @@ n_test = 100
 
 true_mean = np.array([4, -1.3, 8.7, -5.4])
 true_cov = np.array([
-	[1, 0.4, -0.4, 0.1],
-	[0.4, 1, 0.6, -0.2],
-	[-0.4, 0.6, 1, 0.02],
-	[0.1, -0.2, 0.02, 1]
+    [1, 0.4, -0.4, 0.1],
+    [0.4, 1, 0.6, -0.2],
+    [-0.4, 0.6, 1, 0.02],
+    [0.1, -0.2, 0.02, 1]
 ])
 
 train = np.random.multivariate_normal(true_mean, true_cov, size=n_train)
 test = np.random.multivariate_normal(true_mean, true_cov, size=n_test)
 
-# Inputs.
+# Print input information
 print("--- Inputs ---\n")
-
 print(f"True mean vector: {true_mean}")
 print(f"True covariance matrix:\n{true_cov}")
 
-# Fit and print some attributes.
-print("\n--- Hotelling's T-squared fitting on the training set---\n")
+# Initialize both methods
+hotelling_stat = HotellingT2(threshold_method=THRESHOLD_STATISTICAL)
+hotelling_opt = HotellingT2(threshold_method=THRESHOLD_OPTIMIZATION)
 
-hotelling = HotellingT2()
-hotelling.fit(train)
+# Fit both methods
+print("\n--- Hotelling's T-squared fitting with both methods ---\n")
 
-print(f"Computed mean vector: {hotelling.mean_}")
-print(f"Computed covariance matrix:\n{hotelling.cov_}")
-print(f"Hotelling's T-squared UCL: {hotelling.ucl(test)}")
+hotelling_stat.fit(train)
+hotelling_opt.fit(train)
 
-# Compute Hotelling's T-squared score for each sample in the test set.
-print("\n--- Hotelling's T-squared scores on the test set ---\n")
+print("Statistical method:")
+print(f"UCL: {hotelling_stat.ucl(test)}")
+print("\nOptimization method:")
+print(f"UCL: {hotelling_opt.ucl(test)}")
+
+# Compute scores for both methods
+print("\n--- Comparing T-squared scores between methods ---\n")
 
 ucl_baseline = 0.1
-t2_scores = hotelling.score_samples(test)
-scaled_t2_scores = hotelling.scaled_score_samples(test,
-	ucl_baseline=ucl_baseline)
+scores_stat = hotelling_stat.score_samples(test)
+scores_opt = hotelling_opt.score_samples(test)
 
-print(f"Hotelling's T-squared score for each sample:\n{t2_scores}")
-print(f"Scaled Hotelling's T-squared score for each sample:"
-	f"\n{scaled_t2_scores}")
+scaled_scores_stat = hotelling_stat.scaled_score_samples(test, ucl_baseline=ucl_baseline)
+scaled_scores_opt = hotelling_opt.scaled_score_samples(test, ucl_baseline=ucl_baseline)
 
-# Classify each sample.
-print("\n--- Outlier detection ---\n")
+print("Statistical method scores (first 5 samples):")
+print(f"Raw scores: {scores_stat[:5]}")
+print(f"Scaled scores: {scaled_scores_stat[:5]}")
 
-preds = hotelling.predict(test)
-outliers = test[preds == -1]
+print("\nOptimization method scores (first 5 samples):")
+print(f"Raw scores: {scores_opt[:5]}")
+print(f"Scaled scores: {scaled_scores_opt[:5]}")
 
-print(f"Prediction for each sample:\n{preds}")
-print(f"Detected outliers:\n{outliers}")
+# Outlier detection comparison
+print("\n--- Outlier Detection Comparison ---\n")
 
-# Compute Hotelling's T-squared score for the entire test set.
-print("\n--- Hotelling's T-squared score on the test set ---\n")
+preds_stat = hotelling_stat.predict(test)
+preds_opt = hotelling_opt.predict(test)
 
-t2_score = hotelling.score(test)
-ucl = n_train / (n_train + 1) * hotelling.ucl_indep_
+n_outliers_stat = np.sum(preds_stat == -1)
+n_outliers_opt = np.sum(preds_opt == -1)
 
-print(f"Hotelling's T-squared score for the entire test set: {t2_score}")
-print(f"Do the training set and the test set come from the same "
-	f"distribution? {t2_score <= ucl}")
+print(f"Statistical method detected {n_outliers_stat} outliers")
+print(f"Optimization method detected {n_outliers_opt} outliers")
 
-# Plot scaled Hotelling's T-squared scores and the UCL.
-fig, ax = plt.subplots(figsize=(14, 8))
+# Agreement between methods
+agreement = np.sum(preds_stat == preds_opt)
+print(f"\nMethods agree on {agreement}/{len(test)} samples ({agreement / len(test) * 100:.1f}%)")
 
-plt.scatter(range(scaled_t2_scores.size), scaled_t2_scores)
-ucl_line = plt.axhline(y=ucl_baseline, color='r', linestyle='-')
+# Visualization
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12))
 
-ax.set_title('Scaled Hotelling\'s T2 scores')
-ax.set_xlabel('Index')
-ax.set_ylabel('Scaled Hotelling\'s T2 score')
-ucl_line.set_label('UCL')
-plt.legend()
+# Statistical method plot
+ax1.scatter(range(len(scaled_scores_stat)), scaled_scores_stat, label='Samples')
+ucl_line = ax1.axhline(y=ucl_baseline, color='r', linestyle='-', label='UCL')
+ax1.set_title('Statistical Method: Scaled Hotelling\'s T2 scores')
+ax1.set_xlabel('Index')
+ax1.set_ylabel('Scaled T2 score')
+ax1.legend()
+
+# Optimization method plot
+ax2.scatter(range(len(scaled_scores_opt)), scaled_scores_opt, label='Samples')
+ucl_line = ax2.axhline(y=ucl_baseline, color='r', linestyle='-', label='UCL')
+ax2.set_title('Optimization Method: Scaled Hotelling\'s T2 scores')
+ax2.set_xlabel('Index')
+ax2.set_ylabel('Scaled T2 score')
+ax2.legend()
 
 fig.tight_layout()
 plt.show()
+
+# Compare method performance on specific examples
+print("\n--- Method Comparison on Specific Cases ---\n")
+
+# Generate some specific test cases with correct dimensions
+specific_cases = {
+    'Mean point': true_mean.reshape(1, -1),
+    'Far point': (true_mean + np.array([3, 3, 3, 3])).reshape(1, -1),
+    'Edge point': (true_mean + np.array([2, 0, 0, 0])).reshape(1, -1)
+}
+
+print("Comparing methods on specific test cases:")
+for name, point in specific_cases.items():
+    print(f"\n{name}:")
+    stat_score = hotelling_stat.score_samples(point)[0]
+    opt_score = hotelling_opt.score_samples(point)[0]
+
+    is_stat_outlier = stat_score > hotelling_stat.ucl(point)
+    is_opt_outlier = opt_score > hotelling_opt.ucl(point)
+
+    print(f"Statistical method:")
+    print(f"  Score: {stat_score:.2f}")
+    print(f"  Classification: {'outlier' if is_stat_outlier else 'inlier'}")
+
+    print(f"Optimization method:")
+    print(f"  Score: {opt_score:.2f}")
+    print(f"  Classification: {'outlier' if is_opt_outlier else 'inlier'}")
