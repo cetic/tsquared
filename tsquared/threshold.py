@@ -87,7 +87,7 @@ class ThresholdCalculator:
             Sigma = Sigma + np.eye(len(mu)) * 1e-10
 
         # Extract diagonal elements (variances)
-        sigma = np.diag(Sigma)
+        sigma = np.sqrt(np.diag(Sigma))
 
         # Handle zero or near-zero variances
         sigma = np.where(sigma < 1e-10, 1e-10, sigma)
