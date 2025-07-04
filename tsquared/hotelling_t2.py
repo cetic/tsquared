@@ -465,7 +465,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		X = check_array(X,
 			accept_sparse=True,
 			dtype=[np.float64, np.float32],
-			force_all_finite=False,
+			ensure_all_finite=False,
 			ensure_2d=True,
 			estimator=self
 		)

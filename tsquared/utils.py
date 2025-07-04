@@ -73,7 +73,7 @@ def clean_samples(X, *, n_iters=0, perc_samples=.5, n_samples_per_iter=1,
 	X = check_array(X,
 		accept_sparse=True,
 		dtype=[np.float64, np.float32],
-		force_all_finite=False,
+		ensure_all_finite=False,
 		ensure_2d=True,
 		estimator='clean'
 	)
