@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from scipy.io import loadmat
+from tsquared import HotellingT2, THRESHOLD_STATISTICAL, THRESHOLD_OPTIMIZATION
 
 from pyod.models.abod import ABOD
 from pyod.models.cblof import CBLOF
@@ -151,6 +152,13 @@ for j in range(len(mat_file_list)):
             test_scores = clf.decision_function(X_test_norm)
             t1 = time()
             duration = round(t1 - t0, ndigits=4)
+
+            # Nettoyage des scores avant le calcul du ROC AUC
+            if np.any(~np.isfinite(test_scores)):
+                print("Attention : test_scores contient des valeurs infinies ou NaN !")
+                # Option 1 : remplacer les valeurs infinies/NaN par une grande valeur finie
+                test_scores = np.nan_to_num(test_scores, nan=0.0, posinf=np.finfo(np.float64).max, neginf=np.finfo(np.float64).min)
+                # Option 2 : ou ignorer ces modèles/scores
 
             roc = round(roc_auc_score(y_test, test_scores), ndigits=4)
             prn = round(precision_n_scores(y_test, test_scores), ndigits=4)
