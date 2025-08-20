@@ -1,11 +1,14 @@
 import numpy as np
+import math
+import itertools
 from scipy import stats
 from sklearn.utils.validation import check_is_fitted
 
 from tsquared import HotellingT2
 
 class MYTDecomposition:
-	"""MYT Decomposition of the Hotelling's T-squared statistic.
+	"""
+	MYT Decomposition of the Hotelling's T-squared statistic.
 
 	The purpose of the MYT Decomposition of the Hotelling's T-squared statistic
 	is to identify the cause of an out-of-control signal, i.e. an outlier, which
@@ -13,40 +16,52 @@ class MYTDecomposition:
 	decomposition makes it possible to obtain information on which features
 	significantly contribute to the out-of-control signal.
 
-	This implementation does not include the p! entire decompositions, where p
-	is the number of features of the data set. It includes only the p
-	unconditional T-squared terms
+	This implementation provides the full MYT decomposition, meaning that
+	it is possible to compute the p! complete decompositions, one for each
+	permutation (order) of the p features.  
 
-	$T^2_1, T^2_2, \dotsc, T^2_p$
+	For a given ordering π = (π₁, …, πₚ), the decomposition has p terms:
 
-	and the p conditional T-squared terms which condition each feature on the
-	remaining p-1 features
+		T²_{π₁},
+		T²_{π₂ | π₁},
+		T²_{π₃ | π₁,π₂},
+		…,
+		T²_{πₚ | π₁,…,π_{p-1}}.
 
-	$T^2_{1 \cdot 2, \dotsc, p}, T^2_{2 \cdot 1, 3, \dotsc, p}, \dotsc, T^2_{p \cdot 1, \dotsc, p-1}$.
+	Each term measures the contribution of the variable πⱼ, either
+	unconditionally (first variable in the order) or conditionally on the
+	previous variables in that order.
 
-	For one sample s,
+	Interpretation
+	--------------
+	For one sample s:
 
-	- a signal on an unconditional term, meaning that the value of this term is
-	  greater than the upper control limit (UCL) defined for unconditional
-	  terms, implies that the involved feature is outside the operational range
-	  specified by the training set. For example, suppose that $T^2_4$ is
-	  greater than the UCL. This means that the value of the forth feature in
-	  the sample s is outside its allowable range of variation defined by the
-	  training set;
-	- a signal on an conditional term, meaning that the value of this term is
-	  greater than the upper control limit (UCL) defined for conditional terms,
-	  implies that something is wrong with the relationship among the features
-	  included in the conditional term. For example, a signal on
-	  $T^2_{3 \cdot 1, 2, \dotsc, p}$ implies that the relation between the
-	  third feature and the remaining ones is counter to the relationship
-	  observed in the training set. In other words, the value on the third
-	  feature in the sample s is not where it should be relative to the value of
-	  the other features.
+	- A signal on an unconditional term (e.g. T²₄ > UCL) indicates that the
+	corresponding feature is outside its normal range of variation, as defined
+	by the training set. It corresponds to the square of the univariate
+	t-statistic for that feature.
+
+	- A signal on a conditional term (e.g. T²_{3 | 1,2,…,p}) indicates that
+	the relationship between the variable in question and the other variables
+	is abnormal compared to the relationships observed in the training data.
+	In other words, the feature value is inconsistent with the expected
+	multivariate structure.
+
+	Notes
+	-----
+	- The full decomposition involves p! permutations, which grows rapidly with
+	p. For large p, it is recommended to restrict to a subset of permutations.
+	- This implementation provides methods to compute unconditional terms,
+	conditional terms for each variable given the others, and the complete set
+	of MYT terms for one or several orders.
+	- Upper Control Limits (UCLs) are computed using the F distribution, with
+	separate formulas for unconditional and conditional terms.
 
 	Parameters
 	----------
 	hotelling_t2 : tsquared.HotellingT2
-		A tsquared.HotellingT2 object.
+		A fitted HotellingT2 object, providing the mean, covariance,
+		and significance level alpha.
 
 	References
 	----------
@@ -187,7 +202,7 @@ class MYTDecomposition:
 		For each sample s in `X`, compute the following conditional T-squared
 		terms:
 
-		$T^2_{1 \cdot 2, \dotsc, p}, T^2_{2 \cdot 1, 3, \dotsc, p}, \dotsc, T^2_{p \cdot 1, \dotsc, p-1}$,
+			T²_{1 | 2, ..., p}, T²_{2 | 1, 3, ..., p}, ..., T²_{p | 1, ..., p-1}
 
 		where p is the number of features.
 
@@ -203,6 +218,8 @@ class MYTDecomposition:
 			Conditional T-squared terms which condition each feature on the
 			remaining `self.n_features_`-1 features.
 
+		Raises
+		------
 		ValueError
 			If the number of features of `X` is not equal to the number of
 			features of the training set, that is
@@ -258,3 +275,188 @@ class MYTDecomposition:
 
 		return (((n_samples + 1) * (n_samples - 1)) / \
 			(n_samples * (n_samples - n_cond_vars - 1))) * critical_val
+
+	def conditional_contribution_subset(self, X, i, S):
+		"""
+		Compute the vector (n_samples,) of contributions T^2_{i | S}.
+
+		Parameters
+		----------
+		X : {array-like, sparse matrix}, shape (n_samples, n_features)
+			Test set of samples, where n_samples is the number of samples and
+			n_features is the number of features.
+
+		i : int – index of the variable of interest
+
+		S : sequence of indices (can be empty) – variables to condition on
+
+		Returns
+		-------
+		terms : array-like, shape (n_samples,)
+			Conditional T-squared terms T^2_{i | S} for each sample in `X`.
+		"""
+
+		check_is_fitted(self.hotelling_t2)
+		X = self.hotelling_t2._check_test_inputs(X)
+		mean = self.hotelling_t2.mean_
+		cov = self.hotelling_t2.cov_
+
+		p = X.shape[1]
+		if i < 0 or i >= p:
+			raise IndexError("i out of bounds")
+		S = tuple(int(k) for k in S)
+		if i in S:
+			raise ValueError("Index i must not be in S.")
+
+		if len(S) == 0:
+			# Terme inconditionnel (z-score^2)
+			var = cov[i, i]
+			if var <= 0:
+				raise np.linalg.LinAlgError("Non positive variance encountered.")
+			resid = X[:, i] - mean[i]
+			return (resid ** 2) / var
+
+		# Blocs
+		mu_i = mean[i]
+		mu_S = mean[list(S)]
+		Sigma_SS = cov[np.ix_(S, S)]
+		Sigma_iS = cov[np.ix_([i], S)]   # (1, |S|)
+		Sigma_Si = cov[np.ix_(S, [i])]   # (|S|, 1)
+
+		# Inversion (avec petite régularisation si mal conditionné)
+		try:
+			Sigma_SS_inv = np.linalg.inv(Sigma_SS)
+		except np.linalg.LinAlgError:
+			eps = 1e-10
+			Sigma_SS_inv = np.linalg.inv(Sigma_SS + eps * np.eye(len(S)))
+
+		beta = Sigma_iS @ Sigma_SS_inv                 # (1, |S|)
+		var_i_given_S = cov[i, i] - (Sigma_iS @ Sigma_SS_inv @ Sigma_Si)[0, 0]
+		if var_i_given_S <= 0:
+			# numérique : clip à 0+ pour éviter divisions négatives
+			var_i_given_S = max(var_i_given_S, 0.0)
+			if var_i_given_S == 0.0:
+				resid = X[:, i] - (mu_i + (X[:, list(S)] - mu_S) @ beta.T).ravel()
+				return np.where(np.isclose(resid, 0.0, atol=1e-12), 0.0, np.inf)
+
+		mu_i_given_S = mu_i + (X[:, list(S)] - mu_S) @ beta.T   # (n, 1)
+		resid = X[:, i] - mu_i_given_S.ravel()
+		return (resid ** 2) / var_i_given_S
+
+	def myt_terms_for_order(self, X, order=None):
+		"""
+		Computes the full MYT decomposition for a given order of variables.
+
+		Parameters
+		----------
+		X : {array-like, sparse matrix}, shape (n_samples, n_features)
+			Test set of samples, where n_samples is the number of samples and
+			n_features is the number of features.
+
+		order : iterable of int, optional
+			An order of the features, as a sequence of integers from 0 to p-1,
+			where p is the number of features. If None, the order is assumed to be
+			the identity order (0, 1, ..., p-1).
+
+		Returns
+		-------
+		terms : array (n, p)
+			Column t: T^2_{π_t | π_1..π_{t-1}}
+		order : tuple
+			The order used (permutation).
+		"""
+
+		check_is_fitted(self.hotelling_t2)
+		X = self.hotelling_t2._check_test_inputs(X)
+		p = X.shape[1]
+
+		if order is None:
+			order = tuple(range(p))
+		else:
+			order = tuple(int(k) for k in order)
+			if len(order) != p or set(order) != set(range(p)):
+				raise ValueError("`order` must be a permutation of 0..p-1 of length p.")
+
+		terms = np.empty((X.shape[0], p))
+		S_prefix = []
+		for t, i in enumerate(order):
+			terms[:, t] = self.conditional_contribution_subset(X, i=i, S=S_prefix)
+			S_prefix.append(i)
+		return terms, order
+
+	def myt_all_orders(self, X, orders=None, max_permutations=None):
+		"""
+		Compute the MYT decomposition for all permutations (or a subset).
+
+		Parameters
+		----------
+		X : {array-like, sparse matrix}, shape (n_samples, n_features)
+			Test set of samples, where n_samples is the number of samples and
+			n_features is the number of features.
+
+		orders : iterable of orders (each a sequence of length p). If None,
+			all permutations are generated.
+
+		max_permutations : int or None. If p! is large and None, a safeguard is
+			applied: if p > 8, raises an error unless `max_permutations` (or
+			`orders`) is provided. If given, truncates to the first
+			`max_permutations` orders.
+
+		Returns
+		-------
+		results : dict {order_tuple: array(n_samples, n_features)}
+			Dictionary mapping each order (permutation) to its MYT decomposition.
+		"""
+
+		check_is_fitted(self.hotelling_t2)
+		X = self.hotelling_t2._check_test_inputs(X)
+		p = X.shape[1]
+
+		if orders is None:
+			total = math.factorial(p)
+			if max_permutations is None and p > 8:
+				raise ValueError(
+					f"p={p} ⇒ p!={total} permutations. Fournissez `orders` explicites ou `max_permutations` pour échantillonner."
+				)
+			it = itertools.permutations(range(p))
+			if max_permutations is not None:
+				it = itertools.islice(it, int(max_permutations))
+		else:
+			it = (tuple(ordr) for ordr in orders)
+
+		results = {}
+		for order in it:
+			terms, _ = self.myt_terms_for_order(X, order)
+			results[order] = terms
+		return results
+
+	def ucl_conditional_terms_k(self, k):
+		"""
+		Compute the upper control limit (UCL) for a conditional T-squared term at 
+		step k (conditioned on k-1 variables).
+
+		At step k (1 ≤ k ≤ p), the denominator degrees of freedom (dfd) is n - k,
+		and the scaling factor follows the same form as in `ucl_conditional_terms`,
+		where `n_cond_vars = k-1`.
+
+		For k = 1 and k = p, the UCL matches those returned by
+		`ucl_unconditional_terms` and `ucl_conditional_terms`, respectively.
+
+		Parameters
+		----------
+		k : int
+			Step in the MYT decomposition (1-based index).
+
+		Returns
+		-------
+		ucl : float
+			Upper control limit for the conditional T-squared term at step k.
+		"""
+		
+		check_is_fitted(self.hotelling_t2)
+		n_samples = self.hotelling_t2.n_samples_in_
+		if k < 1 or k > self.hotelling_t2.n_features_in_:
+			raise ValueError("k must be in [1, p]")
+		n_cond_vars = k - 1
+		critical_val = stats.f.ppf(q=1 - self.hotelling_t2.alpha, dfn=1, dfd=n_samples - n_cond_vars - 1)
+		return (((n_samples + 1) * (n_samples - 1)) / (n_samples * (n_samples - n_cond_vars - 1))) * critical_val
