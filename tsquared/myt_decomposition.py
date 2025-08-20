@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import pandas as pd
 import itertools
 from scipy import stats
 from sklearn.utils.validation import check_is_fitted
@@ -460,3 +461,54 @@ class MYTDecomposition:
 		n_cond_vars = k - 1
 		critical_val = stats.f.ppf(q=1 - self.hotelling_t2.alpha, dfn=1, dfd=n_samples - n_cond_vars - 1)
 		return (((n_samples + 1) * (n_samples - 1)) / (n_samples * (n_samples - n_cond_vars - 1))) * critical_val
+
+	def all_myt_terms(self, X):
+		"""
+		Computes all distinct MYT decomposition terms for each variable in the input data.
+
+		Each term corresponds to the conditional or marginal Hotelling's T² statistic for a target variable,
+		optionally conditioned on a subset of the remaining variables. The terms are returned as columns in a DataFrame,
+		where each column is labeled according to the target variable and its conditioning set.
+
+		Parameters
+		----------
+		X : array-like of shape (n_samples, n_features)
+			Input data for which to compute the MYT decomposition terms.
+
+		Returns
+		-------
+		pd.DataFrame
+			DataFrame containing all MYT decomposition terms. Each column is labeled as:
+			- "T²_{i}" for the marginal term of variable i (1-based index)
+			- "T²_{i | j1,...,jk}" for the conditional term of variable i given variables j1,...,jk (1-based indices)
+
+		Notes
+		-----
+		For p variables, the output contains all possible combinations (p*2^(p-1)) of target variable and conditioning subsets,
+		excluding the target variable itself from the conditioning set.
+
+		Example (for p=3):
+			Columns:
+				T²_{1}, T²_{2}, T²_{3},
+				T²_{1 | 2}, T²_{1 | 3}, T²_{1 | 2,3},
+				T²_{2 | 1}, T²_{2 | 3}, T²_{2 | 1,3},
+				T²_{3 | 1}, T²_{3 | 2}, T²_{3 | 1,2}
+		"""
+
+		check_is_fitted(self.hotelling_t2)
+		X = self.hotelling_t2._check_test_inputs(X)
+		n_samples, p = X.shape
+
+		results = {}
+		for i in range(p):
+			others = [j for j in range(p) if j != i]
+			for k in range(len(others) + 1):
+				for S in itertools.combinations(others, k):
+					key = f"T²_{{{i+1}" 
+					if S:
+						key += f" | {','.join(str(s+1) for s in S)}}}"
+					else:
+						key += "}"
+					results[key] = self.conditional_contribution_subset(X, i, S)
+
+		return pd.DataFrame(results)
