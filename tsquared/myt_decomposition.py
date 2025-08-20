@@ -398,7 +398,7 @@ class MYTDecomposition:
 			all permutations are generated.
 
 		max_permutations : int or None. If p! is large and None, a safeguard is
-			applied: if p > 8, raises an error unless `max_permutations` (or
+			applied: if p > 7, raises an error unless `max_permutations` (or
 			`orders`) is provided. If given, truncates to the first
 			`max_permutations` orders.
 
@@ -414,7 +414,7 @@ class MYTDecomposition:
 
 		if orders is None:
 			total = math.factorial(p)
-			if max_permutations is None and p > 8:
+			if max_permutations is None and p > 7:
 				raise ValueError(
 					f"p={p} ⇒ p!={total} permutations. Fournissez `orders` explicites ou `max_permutations` pour échantillonner."
 				)
