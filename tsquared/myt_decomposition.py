@@ -504,11 +504,9 @@ class MYTDecomposition:
 			others = [j for j in range(p) if j != i]
 			for k in range(len(others) + 1):
 				for S in itertools.combinations(others, k):
-					key = f"T²_{{{i+1}" 
+					key = f"{i+1}" 
 					if S:
-						key += f" | {','.join(str(s+1) for s in S)}}}"
-					else:
-						key += "}"
+						key += f" | {','.join(str(s+1) for s in S)}"
 					results[key] = self.conditional_contribution_subset(X, i, S)
 
 		return pd.DataFrame(results)
