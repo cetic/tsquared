@@ -248,7 +248,7 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		return scaled_t2_scores
 
 
-	def score(self, X):
+	def score(self, X, compute_ucl=False):
 		"""
 		T-squared score of an entire set of samples. The higher the score, the
 		further `X` is from the training set distribution. If this score is
@@ -258,7 +258,8 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 		Note that the UCL that should be used in this case is not
 		`self.ucl_indep_` nor `self.ucl_not_indep_`, but rather:
 
-		`self.n_samples` / (`self.n_samples` + 1) * `self.ucl_indep_`.
+		`self.n_samples_in_` / (`self.n_samples_in_` + 1) * `self.ucl_indep_` 
+		which can be obtained by setting `compute_ucl=True`.
 
 		Parameters
 		----------
@@ -266,10 +267,18 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 			Test set of samples, where `n_samples` is the number of samples and
 			`n_features` is the number of features.
 
+		compute_ucl : bool, default=False
+			If True, also return the upper control limit (UCL) to be used when
+			comparing the returned T-squared score.
+
 		Returns
 		-------
 		score_sample : float
 			Returns the T-squared score of `X`.
+
+		ucl : float, optional
+			Returns the upper control limit (UCL) to be used when comparing the
+			returned T-squared score.
 
 		Raises
 		------
@@ -286,7 +295,14 @@ class HotellingT2(BaseEstimator, OutlierMixin, TransformerMixin):
 
 		t2_score = (test_mean - self.mean_).T @ np.linalg.inv(self.cov_) @ \
 			(test_mean - self.mean_)
+		
+		# Scale by number of samples in test set.
+		t2_score *= X.shape[0]  
 
+		if compute_ucl:
+			ucl = self.n_samples_in_ / (self.n_samples_in_ + 1) * self.ucl_indep_
+			return t2_score, ucl
+		
 		return t2_score
 
 
